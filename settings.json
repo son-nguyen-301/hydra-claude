@@ -25,6 +25,6 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "SUMMARY=\"$HOME/.aspire-spark/token-summary.json\"; if [ -f \"$SUMMARY\" ]; then jq -r '\"↑\" + (.total_input|tostring) + \" ↓\" + (.total_output|tostring) + \" tokens\"' \"$SUMMARY\" 2>/dev/null; else echo \"Tokens: –\"; fi"
+    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh\""
   }
 }

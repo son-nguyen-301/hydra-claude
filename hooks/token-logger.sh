@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# PostToolUse hook — reads token usage from transcript and writes totals to ~/.aspire-spark/token-summary.json
+# PostToolUse hook — reads token usage from transcript and writes totals to ~/.hydra-claude/token-summary.json
 
-LOG_DIR="$HOME/.aspire-spark"
+LOG_DIR="$HOME/.hydra-claude"
 SUMMARY_FILE="$LOG_DIR/token-summary.json"
 
 mkdir -p "$LOG_DIR"

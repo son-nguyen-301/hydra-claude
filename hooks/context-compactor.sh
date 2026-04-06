@@ -2,7 +2,7 @@
 # UserPromptSubmit hook — requests compaction when cumulative tokens exceed 50% of context window
 # Claude Sonnet/Opus context window: ~200k tokens. 50% threshold = 100k tokens.
 
-SUMMARY_FILE="$HOME/.aspire-spark/token-summary.json"
+SUMMARY_FILE="$HOME/.hydra-claude/token-summary.json"
 CONTEXT_THRESHOLD=100000
 
 if [ ! -f "$SUMMARY_FILE" ]; then

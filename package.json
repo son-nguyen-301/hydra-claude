@@ -1,5 +1,5 @@
 {
-  "name": "aspire-spark",
+  "name": "hydra-claude",
   "version": "1.0.0",
   "description": "A Claude Code Plugin for Aspirers",
   "claude": {
