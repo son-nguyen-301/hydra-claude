@@ -1,0 +1,8 @@
+{
+  "name": "aspire-spark",
+  "version": "1.0.0",
+  "description": "A Claude Code Plugin for Aspirers",
+  "claude": {
+    "type": "plugin"
+  }
+}

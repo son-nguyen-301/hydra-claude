@@ -1,0 +1,39 @@
+{
+  "name": "hydra-claude",
+  "version": "1.0.0",
+  "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
+  "author": {
+    "name": "Nguyen Hai Son"
+  },
+  "license": "MIT",
+  "skills": "../skills/",
+  "agents": "../agents/",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/token-logger.sh\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/context-compactor.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "SUMMARY=\"$HOME/.aspire-spark/token-summary.json\"; if [ -f \"$SUMMARY\" ]; then jq -r '\"↑\" + (.total_input|tostring) + \" ↓\" + (.total_output|tostring) + \" tokens\"' \"$SUMMARY\" 2>/dev/null; else echo \"Tokens: –\"; fi"
+  }
+}

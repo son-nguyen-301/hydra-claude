@@ -1,0 +1,17 @@
+{
+  "name": "hydra-claude",
+  "version": "1.0.0",
+  "description": "Hydra Claude plugin marketplace",
+  "owner": {
+    "name": "Nguyen Hai Son"
+  },
+  "plugins": [
+    {
+      "name": "hydra-claude",
+      "description": "Token tracking, context compaction, and curated development agents and skills.",
+      "version": "1.0.0",
+      "source": "..",
+      "category": "development"
+    }
+  ]
+}
