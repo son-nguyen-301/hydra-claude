@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Test runner — sources all test files and reports results
+
+TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Initialize counters (exported so assert.sh can access them)
+TESTS_PASSED=0
+TESTS_FAILED=0
+
+# Source the assert library first
+source "$TESTS_DIR/lib/assert.sh"
+
+# Source all test files (they define test functions)
+source "$TESTS_DIR/hooks/token-logger.test.sh"
+source "$TESTS_DIR/hooks/context-compactor.test.sh"
+source "$TESTS_DIR/hooks/statusline.test.sh"
+source "$TESTS_DIR/hooks/inject-learned.test.sh"
+source "$TESTS_DIR/config/validate-json.test.sh"
+source "$TESTS_DIR/skills/skills-frontmatter.test.sh"
+
+printf "\n── Running tests ──────────────────────────────────────────────────\n\n"
+
+# hooks/token-logger
+printf "hooks/token-logger.sh\n"
+test_token_logger_empty_transcript_path
+test_token_logger_nonexistent_transcript
+test_token_logger_valid_transcript
+test_token_logger_cache_tokens
+
+printf "\nhooks/context-compactor.sh\n"
+test_context_compactor_no_summary_file
+test_context_compactor_different_transcript
+test_context_compactor_below_threshold
+test_context_compactor_at_threshold
+test_context_compactor_above_threshold
+
+printf "\nhooks/statusline.sh\n"
+test_statusline_no_summary_file
+test_statusline_with_summary
+test_statusline_no_context_window
+test_statusline_ctx_30_percent
+test_statusline_ctx_60_percent
+test_statusline_ctx_85_percent
+
+printf "\nhooks/inject-learned.sh\n"
+test_inject_learned_no_cwd
+test_inject_learned_no_learned_file
+test_inject_learned_empty_file
+test_inject_learned_with_content
+
+printf "\nconfig/validate-json\n"
+test_plugin_json_valid
+test_plugin_json_has_name
+test_plugin_json_has_version
+test_plugin_json_has_hooks_post_tool_use
+test_plugin_json_has_hooks_user_prompt_submit
+test_plugin_json_has_hooks_session_start
+test_plugin_json_has_status_line_command
+test_plugin_json_agents_non_empty_array
+test_plugin_json_has_skills
+test_settings_json_valid
+test_settings_json_has_hooks_post_tool_use
+test_settings_json_has_hooks_user_prompt_submit
+test_settings_json_has_hooks_session_start
+test_settings_json_has_status_line_command
+
+printf "\nskills/frontmatter\n"
+test_skills_frontmatter_all
+
+# ── Summary ──────────────────────────────────────────────────────────────────
+
+printf "\n────────────────────────────────────────────────────────────────────\n"
+printf "%d passed, %d failed\n" "$TESTS_PASSED" "$TESTS_FAILED"
+
+if [ "$TESTS_FAILED" -gt 0 ]; then
+  exit 1
+fi
+exit 0
