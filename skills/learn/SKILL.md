@@ -18,11 +18,12 @@ Focus on:
 **Step 2 — Filter for repo-specific patterns only**
 Exclude generic best practices already covered by the existing rules. Only save what is specific to this repository and would not be obvious from reading the code.
 
-**Step 3 — Save to shared memory**
-Write the extracted patterns to `.claude/memory/learned.md` in the project root.
+**Step 3 — Save to project-local shared memory**
+Write the extracted patterns to `.claude/memory/learned.md` in the **project root** (the directory where `claude` was launched).
 - Create `.claude/memory/` if it does not exist.
 - If `learned.md` already exists, merge new patterns in — do not overwrite existing ones unless they conflict.
 - Format each entry as a brief rule with a **Why:** explanation.
+- **NEVER** write to `~/.claude/skills/learned/` or any path under `~/.claude/`. These patterns are repo-specific and must stay local to the project.
 
 ## Output
 
