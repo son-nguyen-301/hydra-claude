@@ -64,6 +64,40 @@ test_token_logger_valid_transcript() {
   fi
 }
 
+test_token_logger_subagent_transcripts() {
+  local TMPDIR
+  TMPDIR=$(mktemp -d)
+  trap 'rm -rf "$TMPDIR"' RETURN
+
+  local transcript="$TMPDIR/transcript.jsonl"
+  printf '%s\n' \
+    '{"message":{"id":"msg_01","usage":{"input_tokens":1000,"output_tokens":50,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}' \
+    > "$transcript"
+
+  # Subagent transcript in the same directory with output tokens across two turns
+  local subagent="$TMPDIR/subagent.jsonl"
+  printf '%s\n' \
+    '{"message":{"id":"sub_01","usage":{"input_tokens":200,"output_tokens":300}}}' \
+    '{"message":{"id":"sub_02","usage":{"input_tokens":400,"output_tokens":700}}}' \
+    > "$subagent"
+
+  local payload
+  payload=$(printf '{"transcript_path":"%s"}' "$transcript")
+  echo "$payload" | HOME="$TMPDIR" bash "$TOKEN_LOGGER_HOOK"
+  local exit_code=$?
+
+  assert_exit 0 "$exit_code" "token-logger: subagent transcript exits 0"
+
+  local summary="$TMPDIR/.hydra-claude/token-summary.json"
+  if [ -f "$summary" ]; then
+    local total_output_subagents
+    total_output_subagents=$(jq -r '.total_output_subagents // "missing"' "$summary" 2>/dev/null)
+    assert_eq "1000" "$total_output_subagents" "token-logger: total_output_subagents sums all subagent output tokens (300+700=1000)"
+  else
+    fail "token-logger: subagent transcript — summary file not written"
+  fi
+}
+
 test_token_logger_cache_tokens() {
   local TMPDIR
   TMPDIR=$(mktemp -d)

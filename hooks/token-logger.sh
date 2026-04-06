@@ -38,8 +38,29 @@ if [ -z "$TOTALS" ]; then
   exit 0
 fi
 
+# Sum output tokens from subagent transcripts created in this session.
+# Use birth time (macOS) with mtime fallback to avoid counting older transcripts.
+TRANSCRIPT_DIR=$(dirname "$TRANSCRIPT")
+MAIN_BIRTH=$(stat -f "%B" "$TRANSCRIPT" 2>/dev/null || stat -c "%W" "$TRANSCRIPT" 2>/dev/null || echo 0)
+# If birth time is unavailable or zero (Linux without statx), fall back to mtime
+[ "$MAIN_BIRTH" = "0" ] && MAIN_BIRTH=$(stat -f "%m" "$TRANSCRIPT" 2>/dev/null || stat -c "%Y" "$TRANSCRIPT" 2>/dev/null || echo 0)
+
+SUBAGENT_OUTPUT=0
+for f in "$TRANSCRIPT_DIR"/*.jsonl; do
+  [ "$f" = "$TRANSCRIPT" ] && continue
+  [ ! -f "$f" ] && continue
+  F_MTIME=$(stat -f "%m" "$f" 2>/dev/null || stat -c "%Y" "$f" 2>/dev/null || echo 0)
+  [ "$F_MTIME" -lt "$MAIN_BIRTH" ] && continue
+  file_output=$(jq -rn --rawfile t "$f" '
+    ($t | split("\n") | map(select(length > 0) | try fromjson catch null) | map(select(. != null))) as $all
+    | [$all[] | select(.message.usage.output_tokens != null) | .message.usage.output_tokens] | add // 0
+  ' 2>/dev/null || echo 0)
+  SUBAGENT_OUTPUT=$((SUBAGENT_OUTPUT + file_output))
+done
+
 echo "$TOTALS" | jq --arg updated "$TIMESTAMP" --arg transcript "$TRANSCRIPT" \
-  '. + {last_updated: $updated, transcript_path: $transcript}' \
+  --argjson subagent_output "$SUBAGENT_OUTPUT" \
+  '. + {last_updated: $updated, transcript_path: $transcript, total_output_subagents: $subagent_output}' \
   > "$SUMMARY_FILE" 2>/dev/null
 
 exit 0

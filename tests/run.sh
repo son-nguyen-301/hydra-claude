@@ -25,6 +25,7 @@ printf "hooks/token-logger.sh\n"
 test_token_logger_empty_transcript_path
 test_token_logger_nonexistent_transcript
 test_token_logger_valid_transcript
+test_token_logger_subagent_transcripts
 test_token_logger_cache_tokens
 
 printf "\nhooks/context-compactor.sh\n"
@@ -41,6 +42,8 @@ test_statusline_no_context_window
 test_statusline_ctx_30_percent
 test_statusline_ctx_60_percent
 test_statusline_ctx_85_percent
+test_statusline_combined_output_with_subagents
+test_statusline_no_subagents_field_defaults_to_zero
 
 printf "\nhooks/inject-learned.sh\n"
 test_inject_learned_no_cwd

@@ -11,10 +11,17 @@ _statusline_write_summary() {
   local dir="$1"
   local total_input="${2:-1000}"
   local total_output="${3:-50}"
+  local total_output_subagents="${4:-}"
   mkdir -p "$dir/.hydra-claude"
-  printf '{"total_input":%d,"total_output":%d,"last_updated":"2024-01-01T00:00:00Z"}\n' \
-    "$total_input" "$total_output" \
-    > "$dir/.hydra-claude/token-summary.json"
+  if [ -n "$total_output_subagents" ]; then
+    printf '{"total_input":%d,"total_output":%d,"total_output_subagents":%d,"last_updated":"2024-01-01T00:00:00Z"}\n' \
+      "$total_input" "$total_output" "$total_output_subagents" \
+      > "$dir/.hydra-claude/token-summary.json"
+  else
+    printf '{"total_input":%d,"total_output":%d,"last_updated":"2024-01-01T00:00:00Z"}\n' \
+      "$total_input" "$total_output" \
+      > "$dir/.hydra-claude/token-summary.json"
+  fi
 }
 
 test_statusline_no_summary_file() {
@@ -109,4 +116,36 @@ test_statusline_ctx_85_percent() {
   plain=$(_strip_ansi "$output")
 
   assert_contains "ctx:85%" "$plain" "statusline: used_percentage=85 shows ctx:85%"
+}
+
+test_statusline_combined_output_with_subagents() {
+  local TMPDIR
+  TMPDIR=$(mktemp -d)
+  trap 'rm -rf "$TMPDIR"' RETURN
+
+  # total_output=50, total_output_subagents=1000 → displayed ↓ should be 1050
+  _statusline_write_summary "$TMPDIR" 1234 50 1000
+
+  local output
+  output=$(echo '{}' | HOME="$TMPDIR" bash "$STATUSLINE_HOOK")
+  local plain
+  plain=$(_strip_ansi "$output")
+
+  assert_contains "↓1050" "$plain" "statusline: combines total_output + total_output_subagents in ↓ display"
+}
+
+test_statusline_no_subagents_field_defaults_to_zero() {
+  local TMPDIR
+  TMPDIR=$(mktemp -d)
+  trap 'rm -rf "$TMPDIR"' RETURN
+
+  # Summary without total_output_subagents — output should equal total_output only
+  _statusline_write_summary "$TMPDIR" 500 75
+
+  local output
+  output=$(echo '{}' | HOME="$TMPDIR" bash "$STATUSLINE_HOOK")
+  local plain
+  plain=$(_strip_ansi "$output")
+
+  assert_contains "↓75" "$plain" "statusline: missing total_output_subagents defaults to 0 (shows ↓75)"
 }

@@ -20,7 +20,7 @@ USED_PCT=$(echo "$INPUT_JSON" | jq -r '.context_window.used_percentage // empty'
 # Build token counts from summary file
 if [ -f "$SUMMARY" ]; then
   TOTAL_IN=$(jq -r '.total_input // 0' "$SUMMARY" 2>/dev/null)
-  TOTAL_OUT=$(jq -r '.total_output // 0' "$SUMMARY" 2>/dev/null)
+  TOTAL_OUT=$(jq -r '(.total_output // 0) + (.total_output_subagents // 0)' "$SUMMARY" 2>/dev/null)
 
   TOKENS_PART="${CYAN}↑${TOTAL_IN}${RESET} ${GREEN}↓${TOTAL_OUT}${RESET} ${DIM}tokens${RESET}"
 else
