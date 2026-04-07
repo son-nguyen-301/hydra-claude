@@ -38,7 +38,7 @@ Write the plan to `.claude/plans/plan-{plan-id}.md` (create `.claude/plans/` if 
 Gather bug details from user input. If the user provides a Jira ticket or Confluence page, use the `read-jira` or `read-confluence` skill. NEVER assume — ask the user if anything is unclear.
 
 **Step 2 — Find the root cause**
-Use `GitNexus` MCP tools and skills to trace the root cause and identify which files need to change. If GitNexus is unavailable, use other available tools.
+Use the `debug` skill to get the debug findings file. Then use the `read-debug-findings` skill to read the findings file and understand the root cause before writing the plan.
 
 **Step 3 — Assess complexity**
 
