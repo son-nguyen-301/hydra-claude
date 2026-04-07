@@ -9,7 +9,7 @@
     {
       "name": "hydra-claude",
       "description": "Token tracking, context compaction, and curated development agents and skills.",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "source": "./",
       "author": {
         "name": "Nguyen Hai Son"

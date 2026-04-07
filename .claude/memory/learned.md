@@ -100,11 +100,19 @@ The `Skill` tool for `hydra-claude:plan-task` currently outputs its own SKILL.md
 
 ---
 
-## PostCompact hook is the sole writer of token-summary.json
+## PostCompact hook — plain stdout notification only
 
-`hooks/post-compact.sh` (PostCompact) is now the only hook that writes `~/.hydra-claude/token-summary.json`. The `token-logger.sh` (PostToolUse) was removed. As a result, `context-compactor.sh` won't trigger until after the first compaction — this is intentional.
+`hooks/post-compact.sh` prints a plain-text message to stdout and exits 0. It does NOT write any state file.
 
-**Why:** Token-logger was removed by user request. PostCompact resets the summary with new post-compaction counts.
+```bash
+cat > /dev/null
+echo "Context compacted. Token metrics updated."
+exit 0
+```
+
+This triggers a statusLine refresh because Claude Code renders hook stdout as a user-visible message, which causes the statusLine hook to re-run with fresh post-compact data.
+
+**Why:** A complex file-based approach (writing post-compact state for statusline.sh to read) was proposed then rejected. Plain stdout is sufficient — Claude Code's render cycle does the rest.
 
 ---
 
@@ -133,3 +141,25 @@ printf '%s' "$content" | jq -Rs '{
 ```
 
 **Why:** `UserPromptSubmit` fires on every user message. `SessionStart` fires exactly once per session start/resume.
+
+---
+
+## Task completion checklist
+
+After finishing any task, always:
+1. Write tests for new/changed behavior
+2. Update all relevant files (configs, hook registrations, etc.)
+3. Update README if the change affects user-visible behavior or setup
+
+**Why:** Explicit standing rule from user.
+
+---
+
+## Clean up tests when deleting a hook or script
+
+When a hook or script is deleted, also:
+- Remove its `source "$TESTS_DIR/..."` line from `tests/run.sh`
+- Remove all its test function calls from `tests/run.sh`
+- Remove any related config test functions from `tests/config/validate-json.test.sh` and their calls in `run.sh`
+
+**Why:** Stale test sources cause `bash tests/run.sh` to fail with "file not found". Observed after context-compactor.sh and UserPromptSubmit hook were deleted in task-021 — cleanup was left for plan-023.

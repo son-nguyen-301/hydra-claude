@@ -10,7 +10,7 @@ Out of the box, Claude Code will happily edit any file on request. hydra-claude 
 
 - **Plan before touching files.** Every request that requires code changes goes through a planning step. The plan is saved and the user approves it before any edits happen.
 - **Delegate to the right agent.** Three specialized agents (sprinter, builder, architect) handle execution at the appropriate complexity tier. The orchestrating Claude instance never edits directly.
-- **Track tokens continuously.** A status line shows live input/output token counts and context window pressure. A hook warns before the context gets dangerously full.
+- **Track tokens continuously.** A status line shows live input/output token counts and context window pressure. Token metrics refresh automatically after every compaction.
 - **Inject learned patterns at session start.** Repo-specific conventions are captured once and injected into every new session automatically.
 - **Integrate with Jira and Confluence.** Pull ticket details or page content into the planning context without leaving the terminal.
 
@@ -77,6 +77,27 @@ claude --plugin-dir .
 
 ---
 
+## Permissions
+
+By default, Claude Code will prompt for approval each time hydra-claude writes to its working directories (plans, memory, debug findings, tasks). To auto-approve these writes without being prompted, add the following to your project's `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Write(.claude/plans/*)",
+      "Write(.claude/debug/*)",
+      "Write(.claude/memory/*)",
+      "Write(.claude/tasks/*)"
+    ]
+  }
+}
+```
+
+If `.claude/settings.json` doesn't exist yet, create it at the root of your project.
+
+---
+
 ## Project structure
 
 ```
@@ -90,8 +111,9 @@ hydra-claude/
 │   ├── architect.md         # Expert-complexity agent (Opus)
 │   └── doc-writer.md        # Documentation agent
 ├── hooks/
-│   ├── context-compactor.sh # UserPromptSubmit: warns at 50% context capacity
 │   ├── inject-learned.sh    # SessionStart: injects learned.md as system context
+│   ├── post-compact.sh      # PostCompact: notifies user after compaction
+│   ├── session-end-learn.sh # Stop: prompts learn skill when session ends with significant activity
 │   └── statusline.sh        # StatusLine: displays tokens, cost, and rate limits
 ├── skills/
 │   ├── plan-task/           # Creates a plan before any code change
@@ -138,12 +160,13 @@ The orchestrator passes only the plan file path to the subagent. The agent reads
 
 ### Hooks
 
-Three hooks run automatically in every session:
+Four hooks run automatically in every session:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| `context-compactor.sh` | UserPromptSubmit | Reads the token summary; warns with exit code 2 if input tokens exceed 50% of the 200k context window |
 | `inject-learned.sh` | SessionStart (once per new session) | Reads `.claude/memory/learned.md` and injects it as additional system context |
+| `post-compact.sh` | PostCompact | Prints a notification after `/compact` runs; triggers the status line to refresh with post-compact token data |
+| `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
 | `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
 
 ### Status line
@@ -293,7 +316,7 @@ bash tests/run.sh
 When testing hooks, use `HOME` override to isolate file system side effects:
 
 ```bash
-echo "$payload" | HOME="$TMPDIR" bash hooks/token-logger.sh
+echo "" | HOME="$TMPDIR" bash hooks/post-compact.sh
 ```
 
 Never `source` hook scripts in tests — run them as subprocesses.
@@ -305,10 +328,6 @@ Never `source` hook scripts in tests — run them as subprocesses.
 **Status line not showing token counts**
 
 The status line reads directly from Claude Code's statusLine JSON via stdin. If counts are blank, ensure `jq` is installed and the statusLine hook is registered in `plugin.json` (or `settings.json` for local dev).
-
-**Context warning not firing**
-
-The `context-compactor.sh` hook uses exit code 2 to signal a warning to Claude Code. If warnings are not appearing, check that the hook is registered under `UserPromptSubmit` in your active settings file.
 
 **Skills not found**
 

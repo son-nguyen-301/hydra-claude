@@ -1,6 +1,14 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash /Users/nguyenhaison/Documents/works/hydra-claude/hooks/statusline.sh"
+    "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/statusline.sh\""
+  },
+  "permissions": {
+    "allow": [
+      "Write(.claude/plans/*)",
+      "Write(.claude/debug/*)",
+      "Write(.claude/memory/*)",
+      "Write(.claude/tasks/*)"
+    ]
   }
 }
