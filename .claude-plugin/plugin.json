@@ -18,17 +18,6 @@
     "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh\""
   },
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/token-logger.sh\""
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "matcher": ".*",

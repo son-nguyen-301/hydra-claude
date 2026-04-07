@@ -31,13 +31,13 @@ test_plugin_json_has_version() {
   fi
 }
 
-test_plugin_json_has_hooks_post_tool_use() {
+test_plugin_json_has_no_post_tool_use_token_logger() {
   local val
   val=$(jq -e '.hooks.PostToolUse' "$PLUGIN_JSON" 2>/dev/null)
-  if [ $? -eq 0 ]; then
-    pass "plugin.json: has hooks.PostToolUse"
+  if [ $? -ne 0 ]; then
+    pass "plugin.json: hooks.PostToolUse removed (token-logger deleted)"
   else
-    fail "plugin.json: has hooks.PostToolUse" "field missing"
+    fail "plugin.json: hooks.PostToolUse removed (token-logger deleted)" "field still present"
   fi
 }
 
@@ -95,36 +95,6 @@ test_plugin_json_has_skills() {
 
 test_settings_json_valid() {
   assert_json_valid "$SETTINGS_JSON" "settings.json: is valid JSON"
-}
-
-test_settings_json_has_hooks_post_tool_use() {
-  local val
-  val=$(jq -e '.hooks.PostToolUse' "$SETTINGS_JSON" 2>/dev/null)
-  if [ $? -eq 0 ]; then
-    pass "settings.json: has hooks.PostToolUse"
-  else
-    fail "settings.json: has hooks.PostToolUse" "field missing"
-  fi
-}
-
-test_settings_json_has_hooks_user_prompt_submit() {
-  local val
-  val=$(jq -e '.hooks.UserPromptSubmit' "$SETTINGS_JSON" 2>/dev/null)
-  if [ $? -eq 0 ]; then
-    pass "settings.json: has hooks.UserPromptSubmit"
-  else
-    fail "settings.json: has hooks.UserPromptSubmit" "field missing"
-  fi
-}
-
-test_settings_json_has_hooks_session_start() {
-  local val
-  val=$(jq -e '.hooks.SessionStart' "$SETTINGS_JSON" 2>/dev/null)
-  if [ $? -eq 0 ]; then
-    pass "settings.json: has hooks.SessionStart"
-  else
-    fail "settings.json: has hooks.SessionStart" "field missing"
-  fi
 }
 
 test_settings_json_has_status_line_command() {
