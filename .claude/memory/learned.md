@@ -58,6 +58,40 @@ Each skill is a subdirectory under `skills/` with a `SKILL.md` file. The `plugin
 
 ---
 
+## jq deduplication for streaming JSONL token counts
+
+Claude Code writes assistant messages multiple times during streaming — each write has the same `.message.id` but an increasing `output_tokens` count. `unique_by(.message.id)` keeps the **first** (partial) value. Use `group_by` + last instead:
+
+```jq
+[$all[] | select(.message.role == "assistant" and .message.usage != null)]
+| group_by(.message.id)
+| map(.[-1].message.usage.output_tokens // 0)
+| add // 0
+```
+
+For input tokens, `last` on the full message list is correct (input is cumulative).
+
+**Why:** Observed in `token-logger.sh` — reported 40 tokens vs correct 43,589 due to this bug.
+
+---
+
+## Transcript lazy-creation gap for subagent detection
+
+Claude Code creates the main transcript file on first write, not session start. Subagent transcripts may finish before the main file exists, making their `mtime` older than `stat -f "%B"` on the main file. Use the first timestamp **inside** the transcript as the session anchor, minus a 1800s buffer:
+
+```bash
+SESSION_EPOCH=$(jq -rn --rawfile t "$TRANSCRIPT" '
+  ($t | split("\n") | map(select(length > 0) | try fromjson catch null) | map(select(. != null))) as $all
+  | ($all | map(select(.timestamp != null)) | first | .timestamp)
+  | if . then fromdate else 0 end
+' 2>/dev/null || echo 0)
+SESSION_START=$((SESSION_EPOCH - 1800))
+```
+
+**Why:** `stat -f "%B"` gave a birth time 80s after the Explore agent finished, permanently excluding it.
+
+---
+
 ## `SessionStart` hook for session-scoped context injection
 
 Use `SessionStart` hook (not `UserPromptSubmit`) when injecting a file into every session once. Output structured JSON:
