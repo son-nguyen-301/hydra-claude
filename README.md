@@ -83,10 +83,9 @@ hydra-claude/
 │   ├── architect.md         # Expert-complexity agent (Opus)
 │   └── doc-writer.md        # Documentation agent
 ├── hooks/
-│   ├── token-logger.sh      # PostToolUse: writes token usage to disk
 │   ├── context-compactor.sh # UserPromptSubmit: warns at 50% context capacity
 │   ├── inject-learned.sh    # SessionStart: injects learned.md as system context
-│   └── statusline.sh        # StatusLine: displays tokens and ctx% in CLI
+│   └── statusline.sh        # StatusLine: displays tokens, cost, and rate limits
 ├── skills/
 │   ├── plan-task/           # Creates a plan before any code change
 │   ├── explore-codebase/    # Maps codebase structure and conventions
@@ -132,28 +131,29 @@ The orchestrator passes only the plan file path to the subagent. The agent reads
 
 ### Hooks
 
-Four hooks run automatically in every session:
+Three hooks run automatically in every session:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| `token-logger.sh` | PostToolUse (every API call) | Parses the transcript for token usage and writes totals to `~/.hydra-claude/token-summary.json` |
-| `context-compactor.sh` | UserPromptSubmit (each message) | Reads the token summary; warns with exit code 2 if input tokens exceed 50% of the 200k context window |
-| `inject-learned.sh` | SessionStart (once per new session) | Reads `.claude/memory/learned.md` and injects it as additional system context under the heading "Repo-specific learned patterns (MUST follow strictly)" |
-| `statusline.sh` | StatusLine (continuous) | Displays `↑{input} ↓{output} tokens | ctx:XX%` in the CLI status bar with color-coded pressure indicators |
+| `context-compactor.sh` | UserPromptSubmit | Reads the token summary; warns with exit code 2 if input tokens exceed 50% of the 200k context window |
+| `inject-learned.sh` | SessionStart (once per new session) | Reads `.claude/memory/learned.md` and injects it as additional system context |
+| `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
 
 ### Status line
 
 ```
-↑87k ↓15k tokens | ctx:43%
+↑87k ↓15k $0.42 | ctx:43% | 5h:12%
 ```
 
 - `↑` — input tokens (cyan): current context window usage including cache
-- `↓` — output tokens (green): total generated tokens this session, including subagents
+- `↓` — output tokens (green): total generated tokens this session
+- `$X.XX` — session cost (green < $0.50, yellow $0.50–$2.00, red ≥ $2.00)
 - `ctx:%` — context window fill: green < 50%, yellow 50–80%, red ≥ 80%
+- `5h:%` — 5-hour rate limit usage; shows reset time when ≥ 80%
 
 ### Token tracking details
 
-The token logger tracks each session's consumption to disk at `~/.hydra-claude/token-summary.json`. It uses the **latest** message's `input_tokens` (not a running sum) because each message already reflects the full current context size. Output tokens from subagents are tracked separately by scanning the transcript directory for sibling `.jsonl` files created during the same session.
+The status line reads token data directly from the Claude Code `statusLine` JSON object passed via stdin. No intermediate file is written to disk. The `context_window` field provides input tokens (including cache creation and cache read), output tokens, and context fill percentage. Cost and rate limit data are also provided by Claude Code and displayed directly.
 
 ---
 
@@ -297,7 +297,7 @@ Never `source` hook scripts in tests — run them as subprocesses.
 
 **Status line not showing token counts**
 
-The status line reads from `~/.hydra-claude/token-summary.json`. If the file doesn't exist yet, the display will be blank until the first tool use writes it. Make sure `jq` is installed.
+The status line reads directly from Claude Code's statusLine JSON via stdin. If counts are blank, ensure `jq` is installed and the statusLine hook is registered in `plugin.json` (or `settings.json` for local dev).
 
 **Context warning not firing**
 
