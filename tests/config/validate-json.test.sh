@@ -41,13 +41,13 @@ test_plugin_json_has_no_post_tool_use_token_logger() {
   fi
 }
 
-test_plugin_json_has_hooks_user_prompt_submit() {
+test_plugin_json_has_hooks_post_compact() {
   local val
-  val=$(jq -e '.hooks.UserPromptSubmit' "$PLUGIN_JSON" 2>/dev/null)
+  val=$(jq -e '.hooks.PostCompact' "$PLUGIN_JSON" 2>/dev/null)
   if [ $? -eq 0 ]; then
-    pass "plugin.json: has hooks.UserPromptSubmit"
+    pass "plugin.json: has hooks.PostCompact"
   else
-    fail "plugin.json: has hooks.UserPromptSubmit" "field missing"
+    fail "plugin.json: has hooks.PostCompact" "field missing"
   fi
 }
 
@@ -104,5 +104,15 @@ test_settings_json_has_status_line_command() {
     pass "settings.json: has statusLine.command"
   else
     fail "settings.json: has statusLine.command" "field missing or empty"
+  fi
+}
+
+test_settings_json_has_hooks_post_compact() {
+  local val
+  val=$(jq -e '.hooks.PostCompact' "$SETTINGS_JSON" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    pass "settings.json: has hooks.PostCompact"
+  else
+    fail "settings.json: has hooks.PostCompact" "field missing"
   fi
 }
