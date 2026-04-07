@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hydra-claude",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
   "author": {
     "name": "Nguyen Hai Son"
@@ -22,17 +22,6 @@
     "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh\""
   },
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/context-compactor.sh\""
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": ".*",

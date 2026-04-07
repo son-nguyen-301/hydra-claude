@@ -92,6 +92,36 @@ SESSION_START=$((SESSION_EPOCH - 1800))
 
 ---
 
+## `plan-task` skill displays its definition instead of executing
+
+The `Skill` tool for `hydra-claude:plan-task` currently outputs its own SKILL.md content rather than running as an agent. When this happens, write the plan manually to `.claude/plans/plan-NNN.md` (next sequential ID), then ask the user for approval before delegating to the appropriate subagent.
+
+**Why:** Observed in two consecutive invocations — the skill never created a plan file. Manual plan writing is the fallback.
+
+---
+
+## PostCompact hook is the sole writer of token-summary.json
+
+`hooks/post-compact.sh` (PostCompact) is now the only hook that writes `~/.hydra-claude/token-summary.json`. The `token-logger.sh` (PostToolUse) was removed. As a result, `context-compactor.sh` won't trigger until after the first compaction — this is intentional.
+
+**Why:** Token-logger was removed by user request. PostCompact resets the summary with new post-compaction counts.
+
+---
+
+## PostCompact hook jq pattern for transcript parsing
+
+Use `inputs` (streaming) rather than slurp when parsing large transcript JSONL files. Input tokens come from `last` (cumulative); output tokens use `group_by(.message.id) | map(.[-1])` dedup:
+
+```bash
+TOTAL_INPUT=$(jq -r '[inputs | select(.message.usage != null)] | last | ((.message.usage.input_tokens // 0) + (.message.usage.cache_creation_input_tokens // 0) + (.message.usage.cache_read_input_tokens // 0))' "$TRANSCRIPT")
+
+TOTAL_OUTPUT=$(jq -r '[inputs | select(.message.usage.output_tokens != null)] | group_by(.message.id) | map(.[-1].message.usage.output_tokens // 0) | add // 0' "$TRANSCRIPT")
+```
+
+**Why:** Consistent with the existing jq deduplication learned pattern; `inputs` avoids loading the entire file into memory.
+
+---
+
 ## `SessionStart` hook for session-scoped context injection
 
 Use `SessionStart` hook (not `UserPromptSubmit`) when injecting a file into every session once. Output structured JSON:
