@@ -27,19 +27,26 @@ Out of the box, Claude Code will happily edit any file on request. hydra-claude 
 
 ## Installation
 
-### Option 1 — Plugin mode (recommended)
+### Option 1 — Marketplace (recommended)
 
-Load hydra-claude as a Claude Code plugin. This is the cleanest approach: hooks and skills load automatically without modifying your personal settings.
+Install hydra-claude directly from the Claude Code plugin marketplace:
+
+```
+/plugin marketplace add https://github.com/son-nguyen-301/hydra-claude
+/plugin install hydra-claude@hydra-claude
+```
+
+### Option 2 — Plugin mode (via `--plugin-dir`)
+
+Clone the repo and load it as a plugin at startup:
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-org/hydra-claude.git ~/hydra-claude
+git clone https://github.com/son-nguyen-301/hydra-claude.git ~/hydra-claude
 
 # Start Claude Code with the plugin loaded
 claude --plugin-dir ~/hydra-claude
 ```
-
-> The `--plugin-dir` flag tells Claude Code to load `plugin.json` from that directory. Hooks, agents, and skills are all registered from there.
 
 To avoid typing `--plugin-dir` every session, add an alias to your shell profile:
 
@@ -48,20 +55,20 @@ echo 'alias cc="claude --plugin-dir ~/hydra-claude"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### Option 2 — Project-local (per repo)
+### Option 3 — Project-local (per repo)
 
-If you want hydra-claude active only when working inside a specific project, copy the settings file into that project:
+Copy the settings file into a specific project to activate hydra-claude only there:
 
 ```bash
 cd /your/project
 cp ~/hydra-claude/settings.json .claude/settings.json
 ```
 
-Claude Code automatically picks up `.claude/settings.json` when it exists in the project root. The hooks reference scripts by absolute path via `${CLAUDE_PLUGIN_ROOT}`, so the hooks directory must still be present at the path defined in the settings file. Symlink or copy the `hooks/` directory alongside it if needed.
+Claude Code automatically picks up `.claude/settings.json` when it exists in the project root. The hooks reference scripts by absolute path via `${CLAUDE_PLUGIN_ROOT}`, so the hooks directory must still be present at the path defined in the settings file.
 
-### Option 3 — Use from the project itself
+### Option 4 — Develop from source
 
-If you want to develop or customize hydra-claude, work directly from its directory:
+Work directly from the cloned directory:
 
 ```bash
 cd ~/hydra-claude
