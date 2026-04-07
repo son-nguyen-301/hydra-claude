@@ -1,4 +1,5 @@
 {
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hydra-claude",
   "version": "1.0.0",
   "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
@@ -6,6 +7,9 @@
     "name": "Nguyen Hai Son"
   },
   "license": "MIT",
+  "homepage": "https://github.com/son-nguyen-301/hydra-claude",
+  "repository": "https://github.com/son-nguyen-301/hydra-claude",
+  "keywords": ["agents", "planning", "token-tracking", "workflow", "jira", "confluence"],
   "agents": [
     "./agents/architect.md",
     "./agents/sprinter.md",

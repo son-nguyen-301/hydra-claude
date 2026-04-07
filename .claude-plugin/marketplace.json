@@ -1,7 +1,7 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "hydra-claude",
-  "version": "1.0.0",
-  "description": "Hydra Claude plugin marketplace",
+  "description": "Token tracking, context compaction, and curated development agents and skills for Claude Code.",
   "owner": {
     "name": "Nguyen Hai Son"
   },
@@ -11,7 +11,16 @@
       "description": "Token tracking, context compaction, and curated development agents and skills.",
       "version": "1.0.0",
       "source": "..",
-      "category": "development"
+      "author": {
+        "name": "Nguyen Hai Son"
+      },
+      "homepage": "https://github.com/son-nguyen-301/hydra-claude",
+      "repository": "https://github.com/son-nguyen-301/hydra-claude",
+      "license": "MIT",
+      "keywords": ["agents", "planning", "token-tracking", "workflow", "jira", "confluence"],
+      "tags": ["development", "productivity"],
+      "category": "development",
+      "strict": false
     }
   ]
 }
