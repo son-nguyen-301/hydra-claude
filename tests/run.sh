@@ -47,6 +47,9 @@ test_inject_learned_no_cwd
 test_inject_learned_no_learned_file
 test_inject_learned_empty_file
 test_inject_learned_with_content
+test_inject_learned_plugin_rules_and_learned
+test_inject_learned_plugin_rules_only
+test_inject_learned_neither_exists
 
 printf "\nconfig/validate-json\n"
 test_plugin_json_valid
