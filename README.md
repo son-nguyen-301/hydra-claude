@@ -79,22 +79,20 @@ claude --plugin-dir .
 
 ## Permissions
 
-By default, Claude Code will prompt for approval each time hydra-claude writes to its working directories (plans, memory, debug findings, tasks). To auto-approve these writes without being prompted, add the following to your project's `.claude/settings.json`:
+By default, Claude Code will prompt for approval each time hydra-claude writes to its working directories (plans, memory, debug findings, tasks). These directories now live in the Claude Code project workspace at `~/.claude/projects/<slug>/` where `<slug>` is derived from your project's absolute path (each `/` replaced with `-`). To auto-approve these writes without being prompted, add the following to your project's `.claude/settings.json`:
 
 ```json
 {
   "permissions": {
     "allow": [
-      "Write(.claude/plans/*)",
-      "Write(.claude/debug/*)",
-      "Write(.claude/memory/*)",
-      "Write(.claude/tasks/*)"
+      "Write(/Users/<you>/.claude/projects/*)",
+      "Bash(mkdir -p ~/.claude/projects/*)"
     ]
   }
 }
 ```
 
-If `.claude/settings.json` doesn't exist yet, create it at the root of your project.
+Replace `/Users/<you>` with your actual home directory path. If `.claude/settings.json` doesn't exist yet, create it at the root of your project.
 
 ---
 
@@ -143,7 +141,7 @@ User request
     ▼
 Orchestrator (main Claude instance)
     │
-    ├─ Runs plan-task skill → writes .claude/plans/plan-NNN.md
+    ├─ Runs plan-task skill → writes ~/.claude/projects/<slug>/plans/plan-NNN.md
     │
     ├─ User approves plan
     │
@@ -164,7 +162,7 @@ Four hooks run automatically in every session:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| `inject-learned.sh` | SessionStart (once per new session) | Reads `.claude/memory/learned.md` and injects it as additional system context |
+| `inject-learned.sh` | SessionStart (once per new session) | Reads `~/.claude/projects/<slug>/memory/learned.md` and injects it as additional system context |
 | `post-compact.sh` | PostCompact | Prints a notification after `/compact` runs; triggers the status line to refresh with post-compact token data |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
 | `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
@@ -193,7 +191,7 @@ Skills are invoked by typing `/hydra-claude:<skill-name>` in the Claude Code pro
 
 ### `plan-task`
 
-Analyzes a task, finds the relevant code area, assesses complexity, and writes a plan to `.claude/plans/plan-NNN.md`. Returns the plan path and a recommended subagent tier. The orchestrator uses this to determine which agent to invoke.
+Analyzes a task, finds the relevant code area, assesses complexity, and writes a plan to `~/.claude/projects/<slug>/plans/plan-NNN.md`. Returns the plan path and a recommended subagent tier. The orchestrator uses this to determine which agent to invoke.
 
 **Complexity tiers:**
 
@@ -209,18 +207,18 @@ Retrieve a saved plan by ID or path.
 
 ```
 /hydra-claude:read-plan 3
-/hydra-claude:read-plan .claude/plans/plan-003.md
+/hydra-claude:read-plan ~/.claude/projects/<slug>/plans/plan-003.md
 ```
 
 If the plan is not found, the skill lists the 3–5 most recent plans.
 
 ### `explore-codebase`
 
-Maps the project's structure, conventions, tech stack, and testing patterns. Writes a summary to `.claude/memory/codebase-knowledge.md`. Subagents read this file for context when implementing tasks.
+Maps the project's structure, conventions, tech stack, and testing patterns. Writes a summary to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Subagents read this file for context when implementing tasks.
 
 ### `learn`
 
-Scans the current conversation for repo-specific patterns, decisions, and corrections that should persist across sessions. Merges findings into `.claude/memory/learned.md`. This file is injected automatically at every session start.
+Scans the current conversation for repo-specific patterns, decisions, and corrections that should persist across sessions. Merges findings into `~/.claude/projects/<slug>/memory/learned.md`. This file is injected automatically at every session start.
 
 Run this at the end of a productive session:
 
@@ -267,15 +265,21 @@ Agents are subprocesses launched by the orchestrator to perform the actual file 
 
 ## Memory
 
-hydra-claude uses two memory files within the project:
+hydra-claude stores all workspace files outside the repo, in the Claude Code project workspace:
 
-| File | Purpose |
-|------|---------|
-| `.claude/memory/learned.md` | Repo-specific patterns captured by the `learn` skill; injected at session start |
-| `.claude/memory/codebase-knowledge.md` | Codebase map created by `explore-codebase`; read by agents during task execution |
-| `.claude/plans/plan-NNN.md` | Task plans created by `plan-task`; passed to agents for execution |
+```
+~/.claude/projects/<slug>/
+  plans/           — task plans created by plan-task
+  tasks/           — task summaries written by agents
+  debug-findings/  — debug reports written by the debug skill
+  memory/
+    learned.md           — repo-specific patterns; injected at session start
+    codebase-knowledge.md — codebase map created by explore-codebase
+```
 
-These files are project-local. The `learn` skill never writes to `~/.claude/`.
+The slug is derived from the project's absolute CWD: every `/` is replaced with `-`. For example, `/Users/foo/bar` becomes `-Users-foo-bar`.
+
+These files never live inside the repo and are never committed to git.
 
 ---
 

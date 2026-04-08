@@ -17,7 +17,9 @@ if [ -f "$PLUGIN_RULES_FILE" ]; then
   PLUGIN_RULES=$(cat "$PLUGIN_RULES_FILE")
 fi
 
-LEARNED_FILE="$PROJECT_DIR/.claude/memory/learned.md"
+PROJECT_SLUG=$(echo "$PROJECT_DIR" | tr '/' '-')
+WORKSPACE="$HOME/.claude/projects/$PROJECT_SLUG"
+LEARNED_FILE="$WORKSPACE/memory/learned.md"
 
 LEARNED_CONTENT=""
 if [ -f "$LEARNED_FILE" ]; then

@@ -28,7 +28,14 @@ Use `GitNexus` MCP tools and skills to find where the changes should be made. If
 | expert        | Architectural decisions, unknown-root-cause debugging, security review, cross-cutting refactor                                   | `architect`     |
 
 **Step 4 — Write the plan**
-Write the plan to `.claude/plans/plan-{plan-id}.md` (create `.claude/plans/` if it does not exist). Always read and follow the rules in `.claude/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+
+Workspace path formula:
+> The workspace base is `~/.claude/projects/<slug>/`
+> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
+> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
+> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+
+Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Always read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
 
 ---
 
@@ -49,4 +56,11 @@ Use the `debug` skill to get the debug findings file. Then use the `read-debug-f
 | high / expert | `architect`     |
 
 **Step 4 — Write the plan**
-Write the plan to `.claude/plans/plan-{plan-id}.md` (create `.claude/plans/` if it does not exist). Always read and follow the rules in `.claude/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+
+Workspace path formula:
+> The workspace base is `~/.claude/projects/<slug>/`
+> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
+> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
+> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+
+Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Always read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.

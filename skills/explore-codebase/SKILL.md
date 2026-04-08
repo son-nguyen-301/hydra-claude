@@ -3,6 +3,13 @@ name: explore-codebase
 description: Use this skill when you need to explore and understand the codebase conventions, structure, and patterns.
 ---
 
+## Workspace path formula
+
+> The workspace base is `~/.claude/projects/<slug>/`
+> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
+> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
+> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+
 ## How It Works
 
 **Step 1 — Map the codebase with GitNexus**
@@ -19,8 +26,8 @@ Select a representative set of files from the GitNexus output. Read them to unde
 Read the repo for any existing rule files (e.g., `.eslintrc`, `prettier.config.*`, `CLAUDE.md`, `.cursor/rules`, etc.).
 
 **Step 3 — Save to shared memory**
-Write everything discovered — patterns, conventions, rules, tech stack details — to `.claude/memory/codebase-knowledge.md` in the project root. Create the `.claude/memory/` directory if it does not exist. This path is consistent across all Claude Code sessions working in the same project.
+Compute `<slug>` from the current working directory using the formula above. Write everything discovered — patterns, conventions, rules, tech stack details — to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Create the `memory/` directory if it does not exist. This path is consistent across all Claude Code sessions working in the same project.
 
 ## Output
 
-The path `.claude/memory/codebase-knowledge.md`.
+The path `~/.claude/projects/<slug>/memory/codebase-knowledge.md`.

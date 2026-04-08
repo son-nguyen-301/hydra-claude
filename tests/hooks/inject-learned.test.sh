@@ -3,6 +3,16 @@
 
 INJECT_LEARNED_HOOK="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/hooks/inject-learned.sh"
 
+# Helper: compute the workspace slug from a project dir path
+# (same formula as inject-learned.sh: replace all '/' with '-')
+workspace_for() {
+  local project_dir="$1"
+  local home_dir="$2"
+  local slug
+  slug=$(echo "$project_dir" | tr '/' '-')
+  echo "$home_dir/.claude/projects/$slug/memory/learned.md"
+}
+
 test_inject_learned_no_cwd() {
   local output
   output=$(echo '{}' | bash "$INJECT_LEARNED_HOOK")
@@ -13,14 +23,16 @@ test_inject_learned_no_cwd() {
 }
 
 test_inject_learned_no_learned_file() {
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
+
+  local PROJECT_DIR="/some/test/project"
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: missing learned.md exits 0"
@@ -41,17 +53,20 @@ test_inject_learned_no_learned_file() {
 }
 
 test_inject_learned_empty_file() {
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
 
-  mkdir -p "$TMPDIR/.claude/memory"
-  touch "$TMPDIR/.claude/memory/learned.md"
+  local PROJECT_DIR="/some/test/project"
+  local LEARNED_FILE
+  LEARNED_FILE=$(workspace_for "$PROJECT_DIR" "$FAKE_HOME")
+  mkdir -p "$(dirname "$LEARNED_FILE")"
+  touch "$LEARNED_FILE"
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: empty learned.md exits 0"
@@ -72,18 +87,21 @@ test_inject_learned_empty_file() {
 }
 
 test_inject_learned_with_content() {
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
 
-  mkdir -p "$TMPDIR/.claude/memory"
+  local PROJECT_DIR="/some/test/project"
+  local LEARNED_FILE
+  LEARNED_FILE=$(workspace_for "$PROJECT_DIR" "$FAKE_HOME")
+  mkdir -p "$(dirname "$LEARNED_FILE")"
   printf 'Always use immutable patterns.\nPrefer early returns.\n' \
-    > "$TMPDIR/.claude/memory/learned.md"
+    > "$LEARNED_FILE"
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: with content exits 0"
@@ -106,18 +124,21 @@ test_inject_learned_with_content() {
 }
 
 test_inject_learned_plugin_rules_and_learned() {
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
 
-  mkdir -p "$TMPDIR/.claude/memory"
+  local PROJECT_DIR="/some/test/project"
+  local LEARNED_FILE
+  LEARNED_FILE=$(workspace_for "$PROJECT_DIR" "$FAKE_HOME")
+  mkdir -p "$(dirname "$LEARNED_FILE")"
   printf 'Always use immutable patterns.\nPrefer early returns.\n' \
-    > "$TMPDIR/.claude/memory/learned.md"
+    > "$LEARNED_FILE"
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: plugin rules + learned exits 0"
@@ -151,17 +172,17 @@ test_inject_learned_plugin_rules_and_learned() {
 
 test_inject_learned_plugin_rules_only() {
   # Tests plugin rules injection when learned.md doesn't exist or is empty
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
 
-  mkdir -p "$TMPDIR/.claude/memory"
+  local PROJECT_DIR="/some/test/project"
   # Don't create learned.md to test plugin-only scenario
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: plugin rules only exits 0"
@@ -195,16 +216,17 @@ test_inject_learned_neither_exists() {
   # This test instead verifies that plugin rules are always injected
   # when learned.md is missing.
 
-  local TMPDIR
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR"' RETURN
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$FAKE_HOME"' RETURN
 
-  # Don't create .claude/memory directory at all
+  local PROJECT_DIR="/some/test/project"
+  # Don't create workspace directory at all
 
   local payload
-  payload=$(printf '{"cwd":"%s"}' "$TMPDIR")
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   local output
-  output=$(echo "$payload" | bash "$INJECT_LEARNED_HOOK")
+  output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$INJECT_LEARNED_HOOK")
   local exit_code=$?
 
   assert_exit 0 "$exit_code" "inject-learned: no learned.md exits 0"

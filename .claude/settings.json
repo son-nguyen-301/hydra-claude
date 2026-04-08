@@ -5,10 +5,8 @@
   },
   "permissions": {
     "allow": [
-      "Write(.claude/plans/*)",
-      "Write(.claude/debug/*)",
-      "Write(.claude/memory/*)",
-      "Write(.claude/tasks/*)"
+      "Write(/Users/nguyenhaison/.claude/projects/*)",
+      "Bash(mkdir -p ~/.claude/projects/*)"
     ]
   }
 }
