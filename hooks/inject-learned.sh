@@ -26,6 +26,11 @@ if [ -f "$LEARNED_FILE" ]; then
   LEARNED_CONTENT=$(cat "$LEARNED_FILE")
 fi
 
+# Health-check: warn if no rules found for a known project dir
+if [ -n "$PROJECT_DIR" ] && [ -z "$PLUGIN_RULES" ] && [ -z "$LEARNED_CONTENT" ]; then
+  echo "WARNING [inject-learned]: No plugin rules or learned patterns found for project: $PROJECT_DIR" >&2
+fi
+
 # Exit 0 if both are empty
 if [ -z "$PLUGIN_RULES" ] && [ -z "$LEARNED_CONTENT" ]; then
   exit 0

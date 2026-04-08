@@ -91,6 +91,26 @@ test_plugin_json_has_skills() {
   fi
 }
 
+test_plugin_json_has_hooks_user_prompt_submit() {
+  local val
+  val=$(jq -e '.hooks.UserPromptSubmit' "$PLUGIN_JSON" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    pass "plugin.json: has hooks.UserPromptSubmit"
+  else
+    fail "plugin.json: has hooks.UserPromptSubmit" "field missing"
+  fi
+}
+
+test_plugin_json_has_hooks_stop() {
+  local val
+  val=$(jq -e '.hooks.Stop' "$PLUGIN_JSON" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    pass "plugin.json: has hooks.Stop"
+  else
+    fail "plugin.json: has hooks.Stop" "field missing"
+  fi
+}
+
 # ── settings.json tests ───────────────────────────────────────────────────────
 
 test_settings_json_valid() {

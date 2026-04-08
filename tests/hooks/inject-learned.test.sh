@@ -209,6 +209,28 @@ test_inject_learned_plugin_rules_only() {
   fi
 }
 
+test_inject_learned_health_check_warning() {
+  # To simulate "no plugin CLAUDE.md and no learned.md", copy the hook to a temp dir
+  # so HOOK_DIR/../CLAUDE.md doesn't exist, and use a fake HOME with no learned.md.
+  local TEMP_HOOK_DIR
+  TEMP_HOOK_DIR=$(mktemp -d)
+  local FAKE_HOME
+  FAKE_HOME=$(mktemp -d)
+  trap 'rm -rf "$TEMP_HOOK_DIR" "$FAKE_HOME"' RETURN
+
+  cp "$INJECT_LEARNED_HOOK" "$TEMP_HOOK_DIR/inject-learned.sh"
+
+  local PROJECT_DIR="/some/test/project"
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+
+  local stderr_output
+  stderr_output=$(echo "$payload" | HOME="$FAKE_HOME" bash "$TEMP_HOOK_DIR/inject-learned.sh" 2>&1 >/dev/null)
+
+  assert_contains "WARNING [inject-learned]" "$stderr_output" \
+    "inject-learned: health-check emits warning when no rules found for known project dir"
+}
+
 test_inject_learned_neither_exists() {
   # Note: Plugin CLAUDE.md always exists, so this test verifies
   # that when learned.md doesn't exist, only plugin rules are injected.

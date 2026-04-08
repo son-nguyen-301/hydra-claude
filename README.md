@@ -109,9 +109,11 @@ hydra-claude/
 │   ├── architect.md         # Expert-complexity agent (Opus)
 │   └── doc-writer.md        # Documentation agent
 ├── hooks/
-│   ├── inject-learned.sh    # SessionStart: injects learned.md as system context
-│   ├── post-compact.sh      # PostCompact: notifies user after compaction
-│   ├── session-end-learn.sh # Stop: prompts learn skill when session ends with significant activity
+│   ├── inject-learned.sh       # SessionStart: injects plugin rules + learned.md as system context
+│   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
+│   ├── user-prompt-submit.sh   # UserPromptSubmit: injects condensed rule reminder on every user turn
+│   ├── session-end-learn.sh    # Stop: prompts learn skill when session ends with significant activity
+│   ├── stop-validator.sh       # Stop: detects direct Edit/Write calls and blocks rule violations
 │   └── statusline.sh        # StatusLine: displays tokens, cost, and rate limits
 ├── skills/
 │   ├── plan-task/           # Creates a plan before any code change
@@ -158,14 +160,22 @@ The orchestrator passes only the plan file path to the subagent. The agent reads
 
 ### Hooks
 
-Four hooks run automatically in every session:
+Seven hooks run automatically in every session:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| `inject-learned.sh` | SessionStart (once per new session) | Reads `~/.claude/projects/<slug>/memory/learned.md` and injects it as additional system context |
-| `post-compact.sh` | PostCompact | Prints a notification after `/compact` runs; triggers the status line to refresh with post-compact token data |
+| `inject-learned.sh` | SessionStart (once per new session) | Reads plugin CLAUDE.md and `~/.claude/projects/<slug>/memory/learned.md`; injects both as additional system context |
+| `post-compact.sh` | PostCompact | Re-injects plugin rules and learned patterns after context compaction so rules are never lost |
+| `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 4-line rule reminder to every message to prevent rule drift over long sessions |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
+| `stop-validator.sh` | Stop | Scans the transcript for direct `Edit`/`Write` calls; blocks the turn with a correction message if a rule violation is detected |
 | `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
+
+**Rule enforcement behaviors:**
+
+- **Rule Re-injection (PostCompact)**: After context compaction, all plugin rules and learned patterns are automatically re-injected into the context, ensuring rules survive the `/compact` operation.
+- **Per-Turn Rule Reminder (UserPromptSubmit)**: A condensed 4-line rule reminder is prepended to every user message to prevent rule drift over long sessions.
+- **Rule Violation Detector (Stop)**: After each turn, the Stop hook scans the transcript for direct `Edit`/`Write` calls. If detected, Claude is blocked and must correct itself before the turn ends.
 
 ### Status line
 
