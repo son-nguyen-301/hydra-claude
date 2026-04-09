@@ -112,7 +112,6 @@ hydra-claude/
 │   ├── inject-learned.sh       # SessionStart: injects plugin rules + learned.md as system context
 │   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
 │   ├── user-prompt-submit.sh   # UserPromptSubmit: injects condensed rule reminder on every user turn
-│   ├── pre-tool-use.sh         # PreToolUse: blocks Edit/Write calls before they execute
 │   ├── session-end-learn.sh    # Stop: prompts learn skill when session ends with significant activity
 │   ├── stop-validator.sh       # Stop: detects direct Edit/Write calls and blocks rule violations
 │   └── statusline.sh           # StatusLine: displays tokens, cost, and rate limits
@@ -168,14 +167,12 @@ Eight hooks run automatically in every session:
 | `inject-learned.sh` | SessionStart (once per new session) | Reads plugin CLAUDE.md and `~/.claude/projects/<slug>/memory/learned.md`; injects both as additional system context |
 | `post-compact.sh` | PostCompact | Re-injects plugin rules and learned patterns after context compaction so rules are never lost |
 | `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 4-line rule reminder to every message to prevent rule drift over long sessions |
-| `pre-tool-use.sh` | PreToolUse (before every tool call) | Blocks `Edit` and `Write` calls before they execute; exits 2 with an error message redirecting Claude to the correct workflow |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
 | `stop-validator.sh` | Stop | Scans the transcript for direct `Edit`/`Write` calls; blocks the turn with a correction message if a rule violation is detected |
 | `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
 
 **Rule enforcement behaviors:**
 
-- **PreToolUse blocker (pre-tool-use.sh)**: Before any `Edit` or `Write` tool call executes, this hook intercepts it and exits with code 2, preventing the edit entirely. Claude receives an error message explaining the required workflow: use `plan-task`, get approval, then delegate to a subagent.
 - **Rule Re-injection (PostCompact)**: After context compaction, all plugin rules and learned patterns are automatically re-injected into the context, ensuring rules survive the `/compact` operation.
 - **Per-Turn Rule Reminder (UserPromptSubmit)**: A condensed 4-line rule reminder is prepended to every user message to prevent rule drift over long sessions.
 - **Rule Violation Detector (Stop)**: After each turn, the Stop hook scans the transcript for direct `Edit`/`Write` calls. If detected, Claude is blocked and must correct itself before the turn ends.

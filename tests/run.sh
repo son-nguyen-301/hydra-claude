@@ -16,7 +16,6 @@ source "$TESTS_DIR/hooks/statusline.test.sh"
 source "$TESTS_DIR/hooks/inject-learned.test.sh"
 source "$TESTS_DIR/hooks/user-prompt-submit.test.sh"
 source "$TESTS_DIR/hooks/stop-validator.test.sh"
-source "$TESTS_DIR/hooks/pre-tool-use.test.sh"
 source "$TESTS_DIR/config/validate-json.test.sh"
 source "$TESTS_DIR/skills/skills-frontmatter.test.sh"
 
@@ -68,23 +67,6 @@ test_stop_validator_no_tool_use
 test_stop_validator_agent_tool_use
 test_stop_validator_direct_edit_violation
 test_stop_validator_direct_write_violation
-
-printf "\nhooks/pre-tool-use.sh\n"
-test_pre_tool_use_edit_blocked
-test_pre_tool_use_write_blocked
-test_pre_tool_use_read_allowed
-test_pre_tool_use_bash_allowed
-test_pre_tool_use_empty_tool_name_allowed
-test_pre_tool_use_write_to_plans_allowed
-test_pre_tool_use_write_to_memory_allowed
-test_pre_tool_use_write_to_tasks_allowed
-test_pre_tool_use_write_to_debug_findings_allowed
-test_pre_tool_use_edit_to_plans_allowed
-test_pre_tool_use_write_to_project_source_blocked
-test_pre_tool_use_edit_to_project_source_blocked
-test_pre_tool_use_write_with_subagent_id_allowed
-test_pre_tool_use_edit_with_subagent_id_allowed
-test_pre_tool_use_write_without_agent_id_to_source_blocked
 
 printf "\nconfig/validate-json\n"
 test_plugin_json_valid
