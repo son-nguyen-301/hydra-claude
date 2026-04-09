@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hydra-claude",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
   "author": {
     "name": "Nguyen Hai Son"
@@ -51,10 +51,6 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-end-learn.sh\""
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-validator.sh\""
           }
         ]
       }

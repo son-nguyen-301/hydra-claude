@@ -15,7 +15,6 @@ source "$TESTS_DIR/hooks/post-compact.test.sh"
 source "$TESTS_DIR/hooks/statusline.test.sh"
 source "$TESTS_DIR/hooks/inject-learned.test.sh"
 source "$TESTS_DIR/hooks/user-prompt-submit.test.sh"
-source "$TESTS_DIR/hooks/stop-validator.test.sh"
 source "$TESTS_DIR/config/validate-json.test.sh"
 source "$TESTS_DIR/skills/skills-frontmatter.test.sh"
 
@@ -59,14 +58,6 @@ printf "\nhooks/user-prompt-submit.sh\n"
 test_user_prompt_submit_outputs_json
 test_user_prompt_submit_exits_zero
 test_user_prompt_submit_no_plugin_file
-
-printf "\nhooks/stop-validator.sh\n"
-test_stop_validator_no_transcript
-test_stop_validator_missing_transcript_file
-test_stop_validator_no_tool_use
-test_stop_validator_agent_tool_use
-test_stop_validator_direct_edit_violation
-test_stop_validator_direct_write_violation
 
 printf "\nconfig/validate-json\n"
 test_plugin_json_valid
