@@ -1,9 +1,7 @@
 ---
 name: plan-task
-description: Use this skill to create a plan before working on any coding or bug-fixing task.
+description: "This skill should be used when the user requests file changes, asks to 'plan a task', 'create a plan', 'analyze requirements', or when any coding or bug-fixing task needs to be started."
 ---
-
-## Thought Process
 
 ### Step 1 — Categorize the task
 
@@ -14,10 +12,10 @@ Determine if this is a **Coding Task** or a **Bug Fixing Task**.
 ### Coding Task
 
 **Step 1 — Gather requirements**
-Collect requirements from user input. If the user provides a Jira ticket or Confluence page, use the `read-jira` or `read-confluence` skill. Clarify until requirements are unambiguous. NEVER assume — ask the user if anything is unclear.
+Gather requirements from the current conversation. If a Jira ticket URL is provided, invoke the `read-jira` skill to fetch it. If a Confluence page URL is provided, invoke the `read-confluence` skill to fetch it. Clarify until requirements are unambiguous. NEVER assume — ask the user if anything is unclear.
 
 **Step 2 — Locate the implementation area**
-Use `GitNexus` MCP tools and skills to find where the changes should be made. If GitNexus is unavailable, use other available tools (Grep, Glob, Read, etc.).
+Locate the implementation area using GitNexus MCP tools. If unavailable, use Grep, Glob, Read.
 
 **Step 3 — Assess complexity**
 
@@ -35,17 +33,17 @@ Workspace path formula:
 > (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
 > Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
 
-Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Always read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
 
 ---
 
 ### Bug Fixing Task
 
 **Step 1 — Understand the bug**
-Gather bug details from user input. If the user provides a Jira ticket or Confluence page, use the `read-jira` or `read-confluence` skill. NEVER assume — ask the user if anything is unclear.
+Gather bug details from the current conversation. If a Jira ticket URL is provided, invoke the `read-jira` skill to fetch it. If a Confluence page URL is provided, invoke the `read-confluence` skill to fetch it. NEVER assume — ask the user if anything is unclear.
 
 **Step 2 — Find the root cause**
-Use the `debug` skill to get the debug findings file. Then use the `read-debug-findings` skill to read the findings file and understand the root cause before writing the plan.
+Invoke the `debug` skill to investigate the root cause. Then invoke `read-debug-findings` to read the findings before writing the plan.
 
 **Step 3 — Assess complexity**
 
@@ -63,4 +61,4 @@ Workspace path formula:
 > (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
 > Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
 
-Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Always read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.

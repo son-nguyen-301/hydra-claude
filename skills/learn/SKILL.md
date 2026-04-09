@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Use this skill at session end or on demand to extract repo-specific patterns from the conversation and save them to the project workspace memory for future sessions.
+description: "This skill should be used when the user asks to 'learn from this session', 'save patterns', 'remember these conventions', or at session end when significant patterns were discovered."
 ---
 
 ## Workspace path formula
@@ -10,10 +10,8 @@ description: Use this skill at session end or on demand to extract repo-specific
 > (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
 > Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
 
-## How It Works
-
 **Step 1 — Read the conversation**
-Review the entire current conversation for patterns, decisions, corrections, and conventions that are specific to this repo and worth preserving across sessions.
+Review the current conversation for repo-specific patterns, decisions, corrections, and validated workflows.
 
 Focus on:
 - Coding conventions discovered or enforced during this session
@@ -23,15 +21,9 @@ Focus on:
 - File structure or naming patterns observed
 
 **Step 2 — Filter for repo-specific patterns only**
-Exclude generic best practices already covered by the existing rules. Only save what is specific to this repository and would not be obvious from reading the code.
+Filter to repo-specific patterns only. Exclude generic best practices already covered by existing rules. Only save what is specific to this repository and would not be obvious from reading the code.
 
 **Step 3 — Save to project workspace memory**
-Write the extracted patterns to `~/.claude/projects/<slug>/memory/learned.md`.
-- Compute `<slug>` from the current working directory using the formula above.
-- Create the `memory/` directory if it does not exist.
-- If `learned.md` already exists, merge new patterns in — do not overwrite existing ones unless they conflict.
-- Format each entry as a brief rule with a **Why:** explanation.
-
-## Output
+Compute `<slug>` from CWD. Write extracted patterns to `~/.claude/projects/<slug>/memory/learned.md`. Merge with existing content — do not overwrite unless entries conflict. Create the `memory/` directory if it does not exist. Format each entry as a brief rule with a **Why:** explanation.
 
 Confirm that `~/.claude/projects/<slug>/memory/learned.md` has been updated and summarize what was added.

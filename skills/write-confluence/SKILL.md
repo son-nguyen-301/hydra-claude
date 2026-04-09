@@ -1,17 +1,8 @@
 ---
 name: write-confluence
-description: Use this skill when you need to write content to a Confluence page.
+description: "This skill should be used when the user wants to write or update a Confluence page."
 ---
 
-## Input
+Call `updateConfluencePage` if the page already exists, or `createConfluencePage` for a new page. Pass the provided content and page identifier.
 
-- Confluence page URL
-- The content to write
-
-## Output
-
-Status: `done` or `failed`. Do NOT return the written content.
-
-## How It Works
-
-Use the Atlassian Rovo MCP server tools (`updateConfluencePage` or `createConfluencePage`) to write the provided content to the specified Confluence page. If the MCP server tools are not available, return a `failed` status with a clear explanation.
+Return status `done` on success, or `failed` with explanation if MCP tools are unavailable. Do NOT return the written content.

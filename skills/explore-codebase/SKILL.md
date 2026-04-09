@@ -1,6 +1,6 @@
 ---
 name: explore-codebase
-description: Use this skill when you need to explore and understand the codebase conventions, structure, and patterns.
+description: "This skill should be used when the user asks to 'explore the codebase', 'understand project structure', 'map conventions', or 'learn the tech stack'. Generates codebase-knowledge.md for agent use."
 ---
 
 ## Workspace path formula
@@ -9,8 +9,6 @@ description: Use this skill when you need to explore and understand the codebase
 > where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
 > (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
 > Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
-
-## How It Works
 
 **Step 1 — Map the codebase with GitNexus (always run first)**
 
@@ -57,7 +55,7 @@ If the project exposes tools (MCP server, RPC), call `tool_map` to list all tool
 
 **Step 2 — Read key files for conventions**
 
-Using the file paths surfaced by GitNexus, select a representative set of files to read. Focus on:
+Read a representative set of files using the file paths surfaced by GitNexus. Focus on:
 - Coding conventions and style (a few typical implementation files)
 - Tech stack and dependencies (`package.json`, `go.mod`, `pyproject.toml`, etc.)
 - Testing patterns (a test file or two)
@@ -67,8 +65,4 @@ Using the file paths surfaced by GitNexus, select a representative set of files 
 Read the repo for any existing rule files (e.g., `.eslintrc`, `prettier.config.*`, `CLAUDE.md`, `.cursor/rules`, etc.).
 
 **Step 3 — Save to shared memory**
-Compute `<slug>` from the current working directory using the formula above. Write everything discovered — patterns, conventions, rules, tech stack details — to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Create the `memory/` directory if it does not exist. This path is consistent across all Claude Code sessions working in the same project.
-
-## Output
-
-The path `~/.claude/projects/<slug>/memory/codebase-knowledge.md`.
+Compute `<slug>` from CWD. Write findings to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Create the directory if needed. Return the path.

@@ -6,7 +6,7 @@ model: claude-haiku-4-5-20251001
 
 ## Thought Process
 
-If `.claude/memory/codebase-knowledge.md` exists, read it before starting.
+Compute `<slug>` from the current working directory: take the absolute CWD path and replace every `/` with `-`. If `~/.claude/projects/<slug>/memory/codebase-knowledge.md` exists, read it before starting.
 
 **Step 1 — Gather the task inputs**
 Collect information from user input. If the user provides a Jira ticket or Confluence page, use the `read-jira` or `read-confluence` skill. Ensure you fully understand the task before moving forward. NEVER assume — ask the user if anything is unclear.

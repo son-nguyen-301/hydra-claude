@@ -10,7 +10,7 @@ fi
 
 # Find the last assistant message's tool uses
 LAST_TOOL_NAMES=$(jq -rn '
-  [inputs | select(.type == "assistant")] | last
+  [inputs | select(.message.role == "assistant")] | last
   | (.message.content // [])
   | map(select(.type == "tool_use") | .name)
   | .[]

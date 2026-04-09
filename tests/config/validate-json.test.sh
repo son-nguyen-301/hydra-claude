@@ -3,7 +3,8 @@
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLUGIN_JSON="$ROOT/.claude-plugin/plugin.json"
-SETTINGS_JSON="$ROOT/settings.json"
+# settings.json has a leading space in its filename (filesystem artifact)
+SETTINGS_JSON="$ROOT/ settings.json"
 
 # ── plugin.json tests ─────────────────────────────────────────────────────────
 
@@ -111,6 +112,16 @@ test_plugin_json_has_hooks_stop() {
   fi
 }
 
+test_plugin_json_has_hooks_pre_tool_use() {
+  local val
+  val=$(jq -e '.hooks.PreToolUse' "$PLUGIN_JSON" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    pass "plugin.json: has hooks.PreToolUse"
+  else
+    fail "plugin.json: has hooks.PreToolUse" "field missing"
+  fi
+}
+
 # ── settings.json tests ───────────────────────────────────────────────────────
 
 test_settings_json_valid() {
@@ -134,5 +145,15 @@ test_settings_json_has_hooks_post_compact() {
     pass "settings.json: has hooks.PostCompact"
   else
     fail "settings.json: has hooks.PostCompact" "field missing"
+  fi
+}
+
+test_settings_json_has_hooks_pre_tool_use() {
+  local val
+  val=$(jq -e '.hooks.PreToolUse' "$SETTINGS_JSON" 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    pass "settings.json: has hooks.PreToolUse"
+  else
+    fail "settings.json: has hooks.PreToolUse" "field missing"
   fi
 }

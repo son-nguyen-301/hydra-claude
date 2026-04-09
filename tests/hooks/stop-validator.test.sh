@@ -11,11 +11,11 @@ _make_transcript() {
   if [ -z "$tool_name" ]; then
     # Assistant message with no tool uses
     cat > "$tmpfile" <<'EOF'
-{"type":"assistant","message":{"content":[{"type":"text","text":"Done."}]}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"Done."}]}}
 EOF
   else
     cat > "$tmpfile" <<EOF
-{"type":"assistant","message":{"content":[{"type":"tool_use","name":"$tool_name","id":"abc","input":{}}]}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"tool_use","name":"$tool_name","id":"abc","input":{}}]}}
 EOF
   fi
 }

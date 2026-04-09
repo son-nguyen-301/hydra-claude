@@ -16,6 +16,7 @@ source "$TESTS_DIR/hooks/statusline.test.sh"
 source "$TESTS_DIR/hooks/inject-learned.test.sh"
 source "$TESTS_DIR/hooks/user-prompt-submit.test.sh"
 source "$TESTS_DIR/hooks/stop-validator.test.sh"
+source "$TESTS_DIR/hooks/pre-tool-use.test.sh"
 source "$TESTS_DIR/config/validate-json.test.sh"
 source "$TESTS_DIR/skills/skills-frontmatter.test.sh"
 
@@ -68,6 +69,13 @@ test_stop_validator_agent_tool_use
 test_stop_validator_direct_edit_violation
 test_stop_validator_direct_write_violation
 
+printf "\nhooks/pre-tool-use.sh\n"
+test_pre_tool_use_edit_blocked
+test_pre_tool_use_write_blocked
+test_pre_tool_use_read_allowed
+test_pre_tool_use_bash_allowed
+test_pre_tool_use_empty_tool_name_allowed
+
 printf "\nconfig/validate-json\n"
 test_plugin_json_valid
 test_plugin_json_has_name
@@ -77,12 +85,14 @@ test_plugin_json_has_hooks_post_compact
 test_plugin_json_has_hooks_session_start
 test_plugin_json_has_hooks_user_prompt_submit
 test_plugin_json_has_hooks_stop
+test_plugin_json_has_hooks_pre_tool_use
 test_plugin_json_has_status_line_command
 test_plugin_json_agents_non_empty_array
 test_plugin_json_has_skills
 test_settings_json_valid
 test_settings_json_has_status_line_command
 test_settings_json_has_hooks_post_compact
+test_settings_json_has_hooks_pre_tool_use
 
 printf "\nskills/frontmatter\n"
 test_skills_frontmatter_all

@@ -1,16 +1,8 @@
 ---
 name: read-confluence
-description: Use this skill when you need to gather information from a Confluence page.
+description: "This skill should be used when the user provides a Confluence page URL and needs its content fetched."
 ---
 
-## Input
+Extract the page ID or tiny link ID from the provided URL. Call the `getConfluencePage` Atlassian MCP tool. Return all page content.
 
-A Confluence page URL.
-
-## Output
-
-All information from the Confluence page, or a failure message if MCP server tools are unavailable.
-
-## How It Works
-
-Use the Atlassian Rovo MCP server tools to fetch the Confluence page. Extract the page ID or tiny link ID from the URL and call `getConfluencePage`. If the MCP server tools are not available, return a clear failure message to the user.
+If MCP tools are unavailable, return a clear failure message.

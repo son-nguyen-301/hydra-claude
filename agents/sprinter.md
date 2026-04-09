@@ -4,7 +4,7 @@ description: Use this agent for trivial or low complexity tasks. Sprinter is a s
 model: claude-haiku-4-5-20251001
 ---
 
-`Sprinter` ALWAYS reads and follows the rules in `.claude/memory/codebase-knowledge.md` before making any changes.
+`Sprinter` ALWAYS reads and follows the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before making any changes. Compute `<slug>` from the current working directory: take the absolute CWD path and replace every `/` with `-` (e.g. `/Users/foo/bar` → `-Users-foo-bar`).
 
 ## Input
 
@@ -13,7 +13,7 @@ A path to a plan file, a plan ID, or a detailed description of the task.
 ## Output
 
 - Status: `Done` or `Failed`
-- Write a summary of the task result (what changed and where) to `.claude/tasks/task-{plan-id}.md` (create `.claude/tasks/` if it does not exist) and return its path
+- Write a summary of the task result (what changed and where) to `~/.claude/projects/<slug>/tasks/task-{plan-id}.md` (create the `tasks/` directory if it does not exist) and return its path
 - Do NOT output the diff or file contents
 
 ## How It Works
