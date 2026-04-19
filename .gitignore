@@ -1,2 +1,3 @@
 .claude/tasks
 .claude/plans
+.claude/scheduled_tasks.lock

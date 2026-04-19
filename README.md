@@ -1,6 +1,6 @@
 # hydra-claude
 
-A Claude Code plugin that enforces structured, cost-aware AI development workflows. It provides a planning-first system with specialized agents, real-time token tracking, automatic context management, and integrations with Jira and Confluence.
+A Claude Code plugin for structured, cost-aware AI development workflows. It provides planning-first execution, reusable role prompts, automatic context reinjection, and Jira/Confluence helper skills.
 
 ---
 
@@ -9,8 +9,8 @@ A Claude Code plugin that enforces structured, cost-aware AI development workflo
 Out of the box, Claude Code will happily edit any file on request. hydra-claude adds a disciplined layer on top:
 
 - **Plan before touching files.** Every request that requires code changes goes through a planning step. The plan is saved and the user approves it before any edits happen.
-- **Delegate to the right agent.** Three specialized agents (sprinter, builder, architect) handle execution at the appropriate complexity tier. The orchestrating Claude instance never edits directly.
-- **Track tokens continuously.** A status line shows live input/output token counts and context window pressure. Token metrics refresh automatically after every compaction.
+- **Use the right execution role.** `sprinter`, `builder`, `architect`, and `doc-writer` prompts are available as Claude agents.
+- **Track tokens continuously in Claude Code.** A status line shows live input/output token counts and context window pressure. Token metrics refresh automatically after every compaction.
 - **Inject learned patterns at session start.** Repo-specific conventions are captured once and injected into every new session automatically.
 - **Integrate with Jira and Confluence.** Pull ticket details or page content into the planning context without leaving the terminal.
 
@@ -18,7 +18,7 @@ Out of the box, Claude Code will happily edit any file on request. hydra-claude 
 
 ## Requirements
 
-- [Claude Code](https://claude.ai/code) CLI installed and authenticated
+- [Claude Code](https://claude.ai/code) available
 - macOS or Linux (hooks use bash)
 - `jq` installed (`brew install jq` / `apt install jq`)
 - Optional: Atlassian Rovo MCP server configured, for Jira and Confluence skills
@@ -27,7 +27,7 @@ Out of the box, Claude Code will happily edit any file on request. hydra-claude 
 
 ## Installation
 
-### Option 1 — Marketplace (recommended)
+### Claude Code
 
 Install hydra-claude directly from the Claude Code plugin marketplace:
 
@@ -36,50 +36,31 @@ Install hydra-claude directly from the Claude Code plugin marketplace:
 /plugin install hydra-claude@hydra-claude
 ```
 
-### Option 2 — Plugin mode (via `--plugin-dir`)
-
-Clone the repo and load it as a plugin at startup:
+Or clone the repo and load it directly:
 
 ```bash
-# Clone the repo
 git clone https://github.com/son-nguyen-301/hydra-claude.git ~/hydra-claude
-
-# Start Claude Code with the plugin loaded
 claude --plugin-dir ~/hydra-claude
 ```
 
-To avoid typing `--plugin-dir` every session, add an alias to your shell profile:
+### Claude project-local mode
 
-```bash
-echo 'alias cc="claude --plugin-dir ~/hydra-claude"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-### Option 3 — Project-local (per repo)
-
-Copy the settings file into a specific project to activate hydra-claude only there:
+Copy the repo's local settings file into a specific project to activate hydra-claude only there. Note that this repository currently stores that file as ` settings.json` with a leading space.
 
 ```bash
 cd /your/project
-cp ~/hydra-claude/settings.json .claude/settings.json
+cp ~/hydra-claude/' settings.json' .claude/settings.json
 ```
 
-Claude Code automatically picks up `.claude/settings.json` when it exists in the project root. The hooks reference scripts by absolute path via `${CLAUDE_PLUGIN_ROOT}`, so the hooks directory must still be present at the path defined in the settings file.
-
-### Option 4 — Develop from source
-
-Work directly from the cloned directory:
-
-```bash
-cd ~/hydra-claude
-claude --plugin-dir .
-```
+Claude Code automatically picks up `.claude/settings.json` when it exists in the project root.
 
 ---
 
-## Permissions
+## Workspace storage
 
-By default, Claude Code will prompt for approval each time hydra-claude writes to its working directories (plans, memory, debug findings, tasks). These directories now live in the Claude Code project workspace at `~/.claude/projects/<slug>/` where `<slug>` is derived from your project's absolute path (each `/` replaced with `-`). To auto-approve these writes without being prompted, add the following to your project's `.claude/settings.json`:
+hydra-claude now stores shared state for Claude Code under `~/.claude/projects/<slug>/`, where `<slug>` is derived from the absolute project path with each `/` replaced by `-`.
+
+For Claude Code, if you want to auto-approve writes into this workspace, add the following to your project's `.claude/settings.json`:
 
 ```json
 {
@@ -92,7 +73,16 @@ By default, Claude Code will prompt for approval each time hydra-claude writes t
 }
 ```
 
-Replace `/Users/<you>` with your actual home directory path. If `.claude/settings.json` doesn't exist yet, create it at the root of your project.
+Replace `/Users/<you>` with your actual home directory path.
+
+**Migrating from versions before 3.0.0:** Workspace files previously lived under `~/.hydra-claude/projects/`. To migrate, move your existing data and optionally keep a backup:
+
+```bash
+cp -r ~/.hydra-claude/projects/ ~/.claude/projects-backup-hydra
+mv ~/.hydra-claude/projects/*/ ~/.claude/projects/
+```
+
+Merge any conflicting files manually if both directories already exist.
 
 ---
 
@@ -113,10 +103,10 @@ hydra-claude/
 │   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
 │   ├── user-prompt-submit.sh   # UserPromptSubmit: injects condensed rule reminder on every user turn
 │   ├── session-end-learn.sh    # Stop: prompts learn skill when session ends with significant activity
-│   ├── stop-validator.sh       # Stop: detects direct Edit/Write calls and blocks rule violations
 │   └── statusline.sh           # StatusLine: displays tokens, cost, and rate limits
 ├── skills/
 │   ├── plan-task/           # Creates a plan before any code change
+│   ├── review-plan/         # Reviews a plan through five lenses before execution
 │   ├── explore-codebase/    # Maps codebase structure and conventions
 │   ├── learn/               # Captures repo-specific patterns into memory
 │   ├── read-plan/           # Retrieves a saved plan by ID or path
@@ -126,7 +116,7 @@ hydra-claude/
 ├── tests/
 │   └── run.sh               # Test runner
 ├── CLAUDE.md                # Orchestrator rules (plan-first, no direct edits)
-└── settings.json            # Local dev hook definitions (mirrors plugin.json hooks)
+└──  settings.json              # Claude project-local hook definitions
 ```
 
 ---
@@ -145,6 +135,8 @@ Orchestrator (main Claude instance)
     │
     ├─ Runs plan-task skill → writes ~/.claude/projects/<slug>/plans/plan-NNN.md
     │
+    ├─ (Optional) Runs review-plan skill → writes plan-reviews/review-NNN.md
+    │
     ├─ User approves plan
     │
     └─ Invokes subagent with plan path only
@@ -160,7 +152,7 @@ The orchestrator passes only the plan file path to the subagent. The agent reads
 
 ### Hooks
 
-Eight hooks run automatically in every session:
+The plugin registers the following hooks automatically:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
@@ -168,22 +160,13 @@ Eight hooks run automatically in every session:
 | `post-compact.sh` | PostCompact | Re-injects plugin rules and learned patterns after context compaction so rules are never lost |
 | `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 4-line rule reminder to every message to prevent rule drift over long sessions |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
-| `stop-validator.sh` | Stop | Scans the transcript for direct `Edit`/`Write` calls; blocks the turn with a correction message if a rule violation is detected |
-| `statusline.sh` | StatusLine (continuous) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
+| `statusline.sh` | StatusLine (Claude Code) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
 
 **Rule enforcement behaviors:**
 
 - **Rule Re-injection (PostCompact)**: After context compaction, all plugin rules and learned patterns are automatically re-injected into the context, ensuring rules survive the `/compact` operation.
 - **Per-Turn Rule Reminder (UserPromptSubmit)**: A condensed 4-line rule reminder is prepended to every user message to prevent rule drift over long sessions.
-- **Rule Violation Detector (Stop)**: After each turn, the Stop hook scans the transcript for direct `Edit`/`Write` calls. If detected, Claude is blocked and must correct itself before the turn ends.
-
-The enforcement layers complement each other:
-
-| Layer | Mechanism | When |
-|-------|-----------|------|
-| PreToolUse | Blocks the call before execution | Preventive — damage never happens |
-| Stop validator | Detects violations in the transcript | Reactive — catches anything PreToolUse missed |
-| SessionStart + UserPromptSubmit | Passive rule injection | Continuous — keeps rules in context |
+The active enforcement layers are context reinjection at session start and after compaction, plus the per-turn reminder on every user prompt.
 
 ### Status line
 
@@ -205,19 +188,30 @@ The status line reads token data directly from the Claude Code `statusLine` JSON
 
 ## Skills
 
-Skills are invoked by typing `/hydra-claude:<skill-name>` in the Claude Code prompt. The `plan-task` skill is triggered automatically per CLAUDE.md rules.
+In Claude Code, skills are invoked with `/hydra-claude:<skill-name>`.
 
 ### `plan-task`
 
-Analyzes a task, finds the relevant code area, assesses complexity, and writes a plan to `~/.claude/projects/<slug>/plans/plan-NNN.md`. Returns the plan path and a recommended subagent tier. The orchestrator uses this to determine which agent to invoke.
+Analyzes a task, finds the relevant code area, assesses complexity, and writes a plan to `~/.claude/projects/<slug>/plans/plan-NNN.md`. Returns the plan path and a recommended execution role.
 
 **Complexity tiers:**
 
-| Complexity | Agent |
+| Complexity | Role |
 |-----------|-------|
 | Trivial / low | `hydra-claude:sprinter` |
 | Medium / high | `hydra-claude:builder` |
 | Expert | `hydra-claude:architect` |
+
+### `review-plan`
+
+Review a plan produced by `plan-task` through five lenses (Staff Eng, Tech Lead, SRE, Security, QA) and emit a structured review with Blocker/Major/Minor/Nit findings + concrete rewrites. Writes the review to `~/.claude/projects/<slug>/plan-reviews/review-{plan-id}.md`.
+
+```
+/hydra-claude:review-plan 042
+/hydra-claude:review-plan ~/.claude/projects/<slug>/plans/plan-042.md
+```
+
+Returns the verdict (Approve / Approve-with-changes / Revise) and asks for user approval before the orchestrator proceeds.
 
 ### `read-plan`
 
@@ -232,7 +226,7 @@ If the plan is not found, the skill lists the 3–5 most recent plans.
 
 ### `explore-codebase`
 
-Maps the project's structure, conventions, tech stack, and testing patterns. Writes a summary to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Subagents read this file for context when implementing tasks.
+Maps the project's structure, conventions, tech stack, and testing patterns. Writes a summary to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Execution roles read this file for context when implementing tasks.
 
 ### `learn`
 
@@ -268,26 +262,27 @@ Creates or updates a Confluence page with content you provide.
 
 ---
 
-## Agents
+## Execution roles
 
-Agents are subprocesses launched by the orchestrator to perform the actual file editing. Each is tuned for its complexity tier.
+Claude Code exposes these as registered agents.
 
 | Agent | Model | Best for |
 |-------|-------|---------|
-| `hydra-claude:sprinter` | claude-haiku-4-5 | Simple edits, single-file changes, low-stakes tasks |
-| `hydra-claude:builder` | claude-sonnet-4-6 | Day-to-day features, multi-file changes, medium complexity |
-| `hydra-claude:architect` | claude-opus-4-6 | System design decisions, complex refactors, high-precision tasks |
-| `hydra-claude:doc-writer` | claude-haiku-4-5 | Writing documentation |
+| `sprinter` | Low-complexity implementation | Simple edits, single-file changes, low-stakes tasks |
+| `builder` | Medium/high-complexity implementation | Day-to-day features, multi-file changes |
+| `architect` | Expert implementation | System design decisions, complex refactors |
+| `doc-writer` | Documentation writing | Docs, design notes, Confluence updates |
 
 ---
 
 ## Memory
 
-hydra-claude stores all workspace files outside the repo, in the Claude Code project workspace:
+hydra-claude stores all workspace files outside the repo, in a shared Hydra workspace:
 
 ```
 ~/.claude/projects/<slug>/
   plans/           — task plans created by plan-task
+  plan-reviews/    — plan review reports written by review-plan
   tasks/           — task summaries written by agents
   debug-findings/  — debug reports written by the debug skill
   memory/
@@ -318,22 +313,25 @@ The `plugin.json` `"skills": "./skills/"` directive auto-loads every subdirector
 
 Register the hook in **both** files to ensure it works in all load paths:
 
-1. `.claude-plugin/plugin.json` — for plugin users (`claude --plugin-dir`)
-2. `settings.json` — for local dev sessions
+1. `.claude-plugin/plugin.json` — Claude Code plugin users
+2. ` settings.json` — Claude project-local sessions
 
 ### Modifying agent behavior
 
-Edit the relevant `.md` file in `agents/`. Each file is a system prompt that defines the agent's behavior, tools, and constraints.
+Edit the relevant file in `agents/`.
 
 ---
 
-## Testing
+## Running tests
+
+After cloning, initialize the vendored test dependencies:
 
 ```bash
-npm test
-# or directly
-bash tests/run.sh
+git submodule update --init --recursive
+npm test          # or: bash tests/run.sh
 ```
+
+Tests use [bats-core](https://github.com/bats-core/bats-core) (vendored under `tests/vendor/`). No global install required.
 
 When testing hooks, use `HOME` override to isolate file system side effects:
 
@@ -349,7 +347,7 @@ Never `source` hook scripts in tests — run them as subprocesses.
 
 **Status line not showing token counts**
 
-The status line reads directly from Claude Code's statusLine JSON via stdin. If counts are blank, ensure `jq` is installed and the statusLine hook is registered in `plugin.json` (or `settings.json` for local dev).
+The status line is Claude Code-specific. If counts are blank, ensure `jq` is installed and the statusLine hook is registered in `.claude-plugin/plugin.json` or ` settings.json`.
 
 **Skills not found**
 

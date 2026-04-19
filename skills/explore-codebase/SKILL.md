@@ -3,14 +3,12 @@ name: explore-codebase
 description: "This skill should be used when the user asks to 'explore the codebase', 'understand project structure', 'map conventions', or 'learn the tech stack'. Generates codebase-knowledge.md for agent use."
 ---
 
-## Workspace path formula
+> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
 
-> The workspace base is `~/.claude/projects/<slug>/`
-> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
-> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
-> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+**Step 0 — Check GitNexus availability**
+Call `list_repos` to check whether the current repository is indexed in GitNexus. If the repo is not indexed, skip Step 1 entirely and proceed directly to Step 2 (file-level exploration). Note in the output that GitNexus was unavailable. Rationale: querying an unindexed repo wastes tool calls with no new information.
 
-**Step 1 — Map the codebase with GitNexus (always run first)**
+**Step 1 — Map the codebase with GitNexus**
 
 GitNexus provides a pre-built knowledge graph of the codebase. Always query it before reading any files.
 
@@ -65,4 +63,4 @@ Read a representative set of files using the file paths surfaced by GitNexus. Fo
 Read the repo for any existing rule files (e.g., `.eslintrc`, `prettier.config.*`, `CLAUDE.md`, `.cursor/rules`, etc.).
 
 **Step 3 — Save to shared memory**
-Compute `<slug>` from CWD. Write findings to `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. Create the directory if needed. Return the path.
+Compute `<slug>` from CWD. Write findings to `~/.claude/projects/<slug>/memory/codebase-knowledge.md` following the `codebase-knowledge.md` outline from the shared reference. Create the directory if needed. Return the path.

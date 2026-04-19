@@ -27,13 +27,9 @@ Locate the implementation area using GitNexus MCP tools. If unavailable, use Gre
 
 **Step 4 — Write the plan**
 
-Workspace path formula:
-> The workspace base is `~/.claude/projects/<slug>/`
-> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
-> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
-> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
 
-Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
 
 ---
 
@@ -47,18 +43,14 @@ Invoke the `debug` skill to investigate the root cause. Then invoke `read-debug-
 
 **Step 3 — Assess complexity**
 
-| Complexity    | Suggested agent |
-|---------------|-----------------|
-| trivial / low | `sprinter`      |
-| medium        | `builder`       |
-| high / expert | `architect`     |
+| Complexity    | Signals                                                                                                    | Suggested agent |
+|---------------|------------------------------------------------------------------------------------------------------------|-----------------|
+| trivial / low | One-line fix, obvious typo, known off-by-one, isolated to a single file                                    | `sprinter`      |
+| medium        | Single-module fix, clear repro steps, well-scoped regression                                               | `builder`       |
+| high / expert | Unknown root cause, cross-module impact, security/concurrency concern, requires understanding multiple subsystems | `architect`     |
 
 **Step 4 — Write the plan**
 
-Workspace path formula:
-> The workspace base is `~/.claude/projects/<slug>/`
-> where `<slug>` = the project's absolute CWD path with every `/` replaced by `-`
-> (e.g., `/Users/foo/bar` → `-Users-foo-bar`)
-> Subdirectories: `plans/`, `tasks/`, `debug-findings/`, `memory/`
+> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
 
 Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.

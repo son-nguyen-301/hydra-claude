@@ -1,7 +1,7 @@
 {
   "name": "hydra-claude",
-  "version": "2.2.0",
-  "description": "A Claude Code Plugin for Aspirers",
+  "version": "2.3.0",
+  "description": "A structured planning plugin for Claude Code",
   "claude": {
     "type": "plugin"
   },
