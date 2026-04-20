@@ -1,9 +1,9 @@
 ---
 name: read-plan
-description: "This skill should be used when a plan file needs to be read by ID or path. MUST be invoked before delegating to any executor agent (sprinter, builder, architect) so the agent receives the plan. Also use when the user references a plan by ID or path, or when checking plan status."
+description: "Read a plan file by ID or path. MUST be invoked before delegating to any executor agent (sprinter, builder, architect). Also use when the user references a plan, asks 'show me the plan', 'what's in plan X', or when checking plan status."
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
 
 ## Return contract
 

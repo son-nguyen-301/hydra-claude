@@ -1,9 +1,9 @@
 ---
 name: learn
-description: "This skill should be used when the user asks to 'learn from this session', 'save patterns', 'remember these conventions', or at session end when significant patterns were discovered."
+description: "Capture repo-specific patterns, corrections, and conventions from the current session into learned.md. Invoke when the user says 'learn from this', 'save patterns', 'remember this convention', 'save this for next time', or proactively at session end when significant patterns were discovered during the conversation."
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
 
 **Step 1 — Read the conversation**
 Review the current conversation for repo-specific patterns, decisions, corrections, and validated workflows.
@@ -17,6 +17,29 @@ Focus on:
 
 **Step 2 — Filter for repo-specific patterns only**
 Filter to repo-specific patterns only. Exclude generic best practices already covered by existing rules. Only save what is specific to this repository and would not be obvious from reading the code.
+
+## Example entries
+
+**Good** (repo-specific, actionable):
+```
+## Always use `setup_isolated_home` in bats tests
+**Why:** Tests that write to `~/.claude/` without isolation pollute each
+other's state and cause flaky failures in CI.
+```
+
+**Good** (correction from user):
+```
+## Never use `git add -A` in hook scripts
+**Why:** User corrected this — hooks should only stage files they explicitly
+created, not sweep up unrelated changes.
+```
+
+**Bad** (too generic — not repo-specific):
+```
+## Use descriptive variable names
+**Why:** Readability.
+```
+This is a universal best practice. It belongs in a linter config, not learned.md.
 
 **Step 3 — Dedup pass**
 Before adding a new entry, scan `learned.md` for an existing rule whose intent matches. If found, merge the **Why:** lines rather than appending a duplicate.

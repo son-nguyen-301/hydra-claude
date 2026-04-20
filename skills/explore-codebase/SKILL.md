@@ -1,9 +1,9 @@
 ---
 name: explore-codebase
-description: "This skill should be used when the user asks to 'explore the codebase', 'understand project structure', 'map conventions', or 'learn the tech stack'. Generates codebase-knowledge.md for agent use."
+description: "Map a codebase's structure, conventions, and architecture into codebase-knowledge.md. Invoke when the user says 'explore the codebase', 'understand project structure', 'onboard me', 'what does this project do', 'I'm new to this repo', 'map conventions', or 'learn the tech stack'. All other skills and agents depend on the output of this skill."
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are in `skills/_shared/workspace-core.md`. Output templates are in `skills/_shared/workspace-templates.md`. Read both files first.
 
 **Step 0 — Check GitNexus availability**
 Call `list_repos` to check whether the current repository is indexed in GitNexus. If the repo is not indexed, skip Step 1 entirely and proceed directly to Step 2 (file-level exploration). Note in the output that GitNexus was unavailable. Rationale: querying an unindexed repo wastes tool calls with no new information.

@@ -3,7 +3,7 @@ name: review-plan
 description: "Use this skill to review a plan produced by plan-task through five lenses (Staff Engineer, Tech Lead, SRE, Security, QA). Invoke when the user says 'review the plan', 'check the plan', 'critique the plan', 'EM review', 'staff engineer review', or after plan-task produces a plan and before delegating to an executor agent."
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
 
 ## Step 0 — Precondition
 
@@ -69,7 +69,7 @@ Use this template verbatim — fill in every section; omit a severity section on
 ## Metadata
 - Plan: ~/.claude/projects/<slug>/plans/plan-{plan-id}.md
 - Reviewed-at: {ISO8601}
-- Reviewer persona: Staff Engineer acting as Tech Lead (lenses: Staff Eng, Tech Lead, SRE, Security, QA)
+- Reviewer lenses: Staff Engineer, Tech Lead, SRE, Security, QA
 
 ## Verdict
 One of: **Approve | Approve-with-changes | Revise**

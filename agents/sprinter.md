@@ -4,7 +4,7 @@ description: "Use when the plan complexity is trivial or low: single-file change
 model: claude-haiku-4-5-20251001
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are in `skills/_shared/workspace-core.md`. Output templates are in `skills/_shared/workspace-templates.md`. Read both files first.
 
 ## Input
 

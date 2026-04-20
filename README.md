@@ -105,11 +105,16 @@ hydra-claude/
 │   ├── session-end-learn.sh    # Stop: prompts learn skill when session ends with significant activity
 │   └── statusline.sh           # StatusLine: displays tokens, cost, and rate limits
 ├── skills/
+│   ├── _shared/
+│   │   ├── workspace-core.md      # Paths, slugs, IDs, preconditions, execution record
+│   │   └── workspace-templates.md # All output + document templates (including plan template)
 │   ├── plan-task/           # Creates a plan before any code change
 │   ├── review-plan/         # Reviews a plan through five lenses before execution
 │   ├── explore-codebase/    # Maps codebase structure and conventions
 │   ├── learn/               # Captures repo-specific patterns into memory
+│   ├── debug/               # Investigates bugs and writes debug-report findings
 │   ├── read-plan/           # Retrieves a saved plan by ID or path
+│   ├── read-debug-findings/ # Retrieves a saved debug report by ID or path
 │   ├── read-jira/           # Fetches Jira ticket details
 │   ├── read-confluence/     # Fetches Confluence page content
 │   └── write-confluence/    # Creates or updates Confluence pages
@@ -259,6 +264,25 @@ Fetches a Confluence page by URL.
 ### `write-confluence`
 
 Creates or updates a Confluence page with content you provide.
+
+### `debug`
+
+Investigates bugs and traces root causes. Writes a debug report to `~/.claude/projects/<slug>/debug-findings/debug-report-NNN.md`.
+
+```
+/hydra-claude:debug
+```
+
+Used automatically by `plan-task` when handling bug-fixing tasks.
+
+### `read-debug-findings`
+
+Retrieve a saved debug report by ID or path.
+
+```
+/hydra-claude:read-debug-findings 3
+/hydra-claude:read-debug-findings ~/.claude/projects/<slug>/debug-findings/debug-report-003.md
+```
 
 ---
 

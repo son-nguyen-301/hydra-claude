@@ -1,9 +1,9 @@
 ---
 name: read-debug-findings
-description: "This skill should be used when a debug findings file needs to be read by ID or path. Invoked by plan-task (Bug-fixing branch) after the debug skill writes findings and before writing the fix plan. Also use when the user asks to review previous debug findings."
+description: "Read a debug findings report by ID or path. Invoked by plan-task after the debug skill writes findings. Also use when the user asks to 'review debug findings', 'show me the debug report', or 'what did we find'."
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
 
 ## Return contract
 

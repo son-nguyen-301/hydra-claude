@@ -14,8 +14,11 @@ description: "This skill should be used when the user provides a Jira ticket URL
 **Step 1 — Fetch the issue**
 Call `getJiraIssue` with the extracted issue key.
 
-**Step 2 — Fetch comments and linked issues**
-Call `getJiraIssue` or the relevant MCP tools to retrieve comments and linked issues. Do not stop at the issue body alone.
+**Step 2 — Fetch related data**
+The `getJiraIssue` response body includes comments and linked issues in the response fields. Parse them from the returned data. Additionally:
+- If the issue has subtasks, note each subtask key and status.
+- If the issue has a parent (epic or story), note the parent key for context.
+- If linked issues include blockers, fetch the blocker's status to determine if it is resolved.
 
 **Step 3 — Return shape**
 Return all of the following fields (when present):

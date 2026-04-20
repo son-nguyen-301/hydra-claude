@@ -1,6 +1,6 @@
 ---
 name: plan-task
-description: "This skill should be used when the user requests file changes, asks to 'plan a task', 'create a plan', 'analyze requirements', or when any coding or bug-fixing task needs to be started."
+description: "Use when the user requests any code change, feature, refactor, or bug fix. Triggers on: 'implement X', 'build X', 'add X', 'change X', 'fix X', 'refactor X', 'update X', 'plan a task', 'create a plan'. This is the entry point for ALL file-changing work — invoke proactively even when the user doesn't explicitly say 'plan'."
 ---
 
 ### Step 1 — Categorize the task
@@ -26,10 +26,7 @@ Locate the implementation area using GitNexus MCP tools. If unavailable, use Gre
 | expert        | Architectural decisions, unknown-root-cause debugging, security review, cross-cutting refactor                                   | `architect`     |
 
 **Step 4 — Write the plan**
-
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
-
-Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+Follow the [Shared: Writing the plan](#shared-writing-the-plan) section below.
 
 ---
 
@@ -50,7 +47,14 @@ Invoke the `debug` skill to investigate the root cause. Then invoke `read-debug-
 | high / expert | Unknown root cause, cross-module impact, security/concurrency concern, requires understanding multiple subsystems | `architect`     |
 
 **Step 4 — Write the plan**
+Follow the [Shared: Writing the plan](#shared-writing-the-plan) section below.
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+---
 
-Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+### Shared: Writing the plan
+
+> Workspace path, slug computation, and ID scheme are in `skills/_shared/workspace-core.md`. Output templates are in `skills/_shared/workspace-templates.md`. Read both files first.
+
+Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Use the `plan-{id}.md` template from `workspace-templates.md`.
+
+Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.

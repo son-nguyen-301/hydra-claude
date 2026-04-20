@@ -4,7 +4,7 @@ description: "Use when the user needs documentation written: HLDs, LLDs, ADRs, r
 model: claude-haiku-4-5-20251001
 ---
 
-> Workspace, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace.md`. Read that file first.
+> Workspace path, slug computation, and ID scheme are in `skills/_shared/workspace-core.md`. Output templates are in `skills/_shared/workspace-templates.md`. Read both files first.
 
 ## How It Works
 
@@ -17,7 +17,7 @@ Collect information from user input. If the user provides a Jira ticket or Confl
 **Step 2 — Write the document**
 With all information gathered, write the document the user needs.
 
-Use the document type templates from the shared reference (`skills/_shared/workspace.md`) for standard doc types (HLD, LLD, ADR, Runbook, RFC). If the user provides a custom template, follow it strictly instead.
+Use the document type templates from `skills/_shared/workspace-templates.md` for standard doc types (HLD, LLD, ADR, Runbook, RFC). If the user provides a custom template, follow it strictly instead.
 
 **Step 3 — Output routing**
 Determine where to deliver the document:
