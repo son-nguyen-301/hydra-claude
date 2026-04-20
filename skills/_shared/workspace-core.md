@@ -20,6 +20,7 @@ Directory layout:
 | `debug-findings/`  | Debug reports written by the `debug` skill|
 | `memory/`          | `learned.md` and `codebase-knowledge.md` |
 | `docs/`            | Documents produced by `doc-writer`       |
+| `code-reviews/`    | Code reviews written by `code-reviewer` agent |
 
 ---
 

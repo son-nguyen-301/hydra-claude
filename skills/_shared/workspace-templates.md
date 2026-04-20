@@ -67,6 +67,52 @@ The `explore-codebase` skill produces a file following this outline:
 13. Gotchas / learned patterns
 14. Task completion checklist
 
+### code-review-{plan-id}.md
+
+```markdown
+# Code Review {plan-id}
+
+## Metadata
+- Plan: ~/.claude/projects/<slug>/plans/plan-{plan-id}.md
+- Task: ~/.claude/projects/<slug>/tasks/task-{plan-id}.md
+- Reviewed-at: {ISO8601}
+- Files reviewed: {count}
+- Lenses applied: Plan Compliance, Correctness, Security, Conventions, Edge Cases, Test Quality, Code Quality
+
+## Verdict
+One of: **Approve | Fix-required | Rework**
+
+## Summary
+(2-5 sentences: overall quality, top risks, what stood out.)
+
+## Statistics
+- Total findings: {count}
+- Blockers: {count} | Majors: {count} | Minors: {count} | Nits: {count}
+
+## Findings
+
+### Blockers
+(Omit section if none. Each finding: Severity - Lens - File:lines - Observation - Suggested fix - Rationale - Effort.)
+
+### Major
+...
+
+### Minor
+...
+
+### Nit
+...
+
+## Plan compliance checklist
+(For each plan step: ✅ Done / ❌ Missing / ⚠️ Partial / ↔️ Deviated with brief note.)
+
+## Lens coverage
+Brief note per lens (even when no findings) so the orchestrator sees what was checked.
+
+## Recommended next step
+Either: "Spawn {original-agent} to apply fixes listed above." OR "Task is done — implementation passes all review lenses."
+```
+
 ---
 
 ## Document type templates (doc-writer)

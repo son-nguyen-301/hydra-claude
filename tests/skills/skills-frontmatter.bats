@@ -307,3 +307,29 @@ _check_skill_description_length() {
 @test "skills/review-plan: description >= 40 chars" {
   _check_skill_description_length review-plan
 }
+
+# ── review-code ────────────────────────────────────────────────────────────────
+
+@test "skills/review-code: SKILL.md exists" {
+  _check_skill_file_exists review-code
+}
+
+@test "skills/review-code: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start review-code
+}
+
+@test "skills/review-code: has name: field in frontmatter" {
+  _check_skill_has_name review-code
+}
+
+@test "skills/review-code: has description: field in frontmatter" {
+  _check_skill_has_description review-code
+}
+
+@test "skills/review-code: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty review-code
+}
+
+@test "skills/review-code: description >= 40 chars" {
+  _check_skill_description_length review-code
+}

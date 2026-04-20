@@ -97,7 +97,8 @@ hydra-claude/
 │   ├── sprinter.md          # Low-complexity agent (Haiku)
 │   ├── builder.md           # Medium/high-complexity agent (Sonnet)
 │   ├── architect.md         # Expert-complexity agent (Opus)
-│   └── doc-writer.md        # Documentation agent
+│   ├── doc-writer.md        # Documentation agent
+│   └── code-reviewer.md     # Independent code review agent (Opus)
 ├── hooks/
 │   ├── inject-learned.sh       # SessionStart: injects plugin rules + learned.md as system context
 │   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
@@ -117,7 +118,8 @@ hydra-claude/
 │   ├── read-debug-findings/ # Retrieves a saved debug report by ID or path
 │   ├── read-jira/           # Fetches Jira ticket details
 │   ├── read-confluence/     # Fetches Confluence page content
-│   └── write-confluence/    # Creates or updates Confluence pages
+│   ├── write-confluence/    # Creates or updates Confluence pages
+│   └── review-code/         # Post-implementation code review via code-reviewer agent
 ├── tests/
 │   └── run.sh               # Test runner
 ├── CLAUDE.md                # Orchestrator rules (plan-first, no direct edits)
@@ -151,6 +153,13 @@ Orchestrator (main Claude instance)
            └─ architect (expert complexity)
                   │
                   └─ Reads plan → edits files → writes task summary
+                         │
+                         ▼
+               review-code skill → spawns code-reviewer agent
+                         │
+                         ├─ Approve       → task complete
+                         ├─ Fix-required  → executor re-applies fixes
+                         └─ Rework        → re-plan or escalate
 ```
 
 The orchestrator passes only the plan file path to the subagent. The agent reads the plan itself. This keeps the agent prompt small and the plan the single source of truth.
@@ -284,6 +293,37 @@ Retrieve a saved debug report by ID or path.
 /hydra-claude:read-debug-findings ~/.claude/projects/<slug>/debug-findings/debug-report-003.md
 ```
 
+### `review-code`
+
+Review a completed implementation through seven lenses and produce a structured verdict. Spawns the independent `code-reviewer` agent (Opus) so the reviewer is never the same instance that wrote the code.
+
+```
+/hydra-claude:review-code 042
+/hydra-claude:review-code ~/.claude/projects/<slug>/plans/plan-042.md
+```
+
+Writes the review to `~/.claude/projects/<slug>/code-reviews/review-{plan-id}.md`.
+
+**Review lenses:**
+
+| Lens | What it checks |
+|------|---------------|
+| Plan Compliance | Every plan step implemented; no unplanned changes; wiring complete |
+| Correctness | Logic errors, null handling, type mismatches, resource leaks, async gaps |
+| Security | Injection surfaces, auth gaps, hardcoded secrets, PII in logs |
+| Conventions | Naming, file placement, import order, project utilities reuse |
+| Edge Cases | Empty/null inputs, boundary values, large inputs, partial failure |
+| Test Quality | Coverage, isolation, assertion specificity, no flaky patterns |
+| Code Quality | Overengineering, unnecessary abstractions, dead code, magic numbers |
+
+**Verdict levels:**
+
+| Verdict | Meaning |
+|---------|---------|
+| `Approve` | Zero Blockers, zero Majors — task is done |
+| `Fix-required` | Zero Blockers, one or more Majors — apply fixes then re-review |
+| `Rework` | One or more Blockers — re-plan or escalate |
+
 ---
 
 ## Execution roles
@@ -296,6 +336,7 @@ Claude Code exposes these as registered agents.
 | `builder` | Medium/high-complexity implementation | Day-to-day features, multi-file changes |
 | `architect` | Expert implementation | System design decisions, complex refactors |
 | `doc-writer` | Documentation writing | Docs, design notes, Confluence updates |
+| `code-reviewer` | Independent code review (Opus) | Post-implementation review through 7 lenses; invoked by `review-code` skill |
 
 ---
 
@@ -309,6 +350,7 @@ hydra-claude stores all workspace files outside the repo, in a shared Hydra work
   plan-reviews/    — plan review reports written by review-plan
   tasks/           — task summaries written by agents
   debug-findings/  — debug reports written by the debug skill
+  code-reviews/    — code review reports written by the code-reviewer agent
   memory/
     learned.md           — repo-specific patterns; injected at session start
     codebase-knowledge.md — codebase map created by explore-codebase
