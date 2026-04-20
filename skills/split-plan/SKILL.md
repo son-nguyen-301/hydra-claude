@@ -90,4 +90,4 @@ Agent: split-plan
 
 ## Step 6 — Code review
 
-Invoke the `review-code` skill with the parent plan path for a unified review of all changes made across all subtasks.
+Spawn the `code-reviewer` agent with the parent plan path for a unified review of all changes made across all subtasks.

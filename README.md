@@ -99,7 +99,8 @@ hydra-claude/
 │   ├── builder.md           # Medium/high-complexity agent (Sonnet)
 │   ├── architect.md         # Expert-complexity agent (Opus)
 │   ├── doc-writer.md        # Documentation agent
-│   └── code-reviewer.md     # Independent code review agent (Opus)
+│   ├── code-reviewer.md     # Independent code review agent (Opus)
+│   └── plan-reviewer.md     # Independent plan review agent (Opus)
 ├── hooks/
 │   ├── inject-learned.sh       # SessionStart: injects plugin rules + learned.md as system context
 │   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
@@ -162,7 +163,7 @@ Orchestrator (main Claude instance)
                   └─ Wave N: ...
                          │
                          ▼
-               review-code skill → spawns code-reviewer agent (unified review)
+               code-reviewer agent (unified review with 7 lenses + professional behaviors)
                          │
                          ├─ Approve       → task complete
                          ├─ Fix-required  → executor re-applies fixes
@@ -223,7 +224,7 @@ Analyzes a task, finds the relevant code area, assesses complexity, and writes a
 | Medium / high | `hydra-claude:builder` |
 | Expert | `hydra-claude:architect` |
 
-### `review-plan`
+### `review-plan` (methodology tool — used internally by the plan-reviewer agent)
 
 Review a plan produced by `plan-task` through five lenses (Staff Eng, Tech Lead, SRE, Security, QA) and emit a structured review with Blocker/Major/Minor/Nit findings + concrete rewrites. Writes the review to `~/.claude/projects/<slug>/plan-reviews/review-{plan-id}.md`.
 
@@ -232,7 +233,7 @@ Review a plan produced by `plan-task` through five lenses (Staff Eng, Tech Lead,
 /hydra-claude:review-plan ~/.claude/projects/<slug>/plans/plan-042.md
 ```
 
-Returns the verdict (Approve / Approve-with-changes / Revise) and asks for user approval before the orchestrator proceeds.
+Returns the verdict (Approve / Approve-with-changes / Revise), the review file path, and finding counts to the calling agent.
 
 ### `read-plan`
 
@@ -300,9 +301,9 @@ Retrieve a saved debug report by ID or path.
 /hydra-claude:read-debug-findings ~/.claude/projects/<slug>/debug-findings/debug-report-003.md
 ```
 
-### `review-code`
+### `review-code` (methodology tool — used internally by the code-reviewer agent)
 
-Review a completed implementation through seven lenses and produce a structured verdict. Spawns the independent `code-reviewer` agent (Opus) so the reviewer is never the same instance that wrote the code.
+Review methodology tool that applies seven code review lenses (Plan Compliance, Correctness, Security, Conventions, Edge Cases, Test Quality, Code Quality) to changed files. Accepts a plan path, identifies changed files, produces structured findings with Blocker/Major/Minor/Nit severities, and writes a review file. Used internally by the `code-reviewer` agent.
 
 ```
 /hydra-claude:review-code 042
@@ -354,7 +355,8 @@ Claude Code exposes these as registered agents.
 | `builder` | Medium/high-complexity implementation | Day-to-day features, multi-file changes |
 | `architect` | Expert implementation | System design decisions, complex refactors |
 | `doc-writer` | Documentation writing | Docs, design notes, Confluence updates |
-| `code-reviewer` | Independent code review (Opus) | Post-implementation review through 7 lenses; invoked by `review-code` skill |
+| `code-reviewer` | Independent code review (Opus) | Post-implementation review through 7 lenses + 6 professional behaviors; invoked directly by orchestrator |
+| `plan-reviewer` | Independent plan review (Opus) | Pre-execution plan review through 5 lenses + 6 professional behaviors; invoked directly by orchestrator |
 
 ---
 

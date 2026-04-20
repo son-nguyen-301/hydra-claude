@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hydra-claude",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
   "author": {
     "name": "Nguyen Hai Son"
@@ -15,7 +15,8 @@
     "./agents/sprinter.md",
     "./agents/builder.md",
     "./agents/doc-writer.md",
-    "./agents/code-reviewer.md"
+    "./agents/code-reviewer.md",
+    "./agents/plan-reviewer.md"
   ],
   "skills": "./skills/",
   "statusLine": {

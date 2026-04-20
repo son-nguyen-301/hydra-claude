@@ -68,6 +68,11 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_success
 }
 
+@test "plugin.json: agents array includes plan-reviewer.md" {
+  run jq -e '.agents[] | select(. == "./agents/plan-reviewer.md")' "$PLUGIN_JSON"
+  assert_success
+}
+
 @test "plugin.json: has skills field" {
   run jq -e '.skills' "$PLUGIN_JSON"
   assert_success

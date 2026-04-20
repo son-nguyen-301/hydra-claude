@@ -1,6 +1,6 @@
 ---
 name: review-plan
-description: "Use this skill to review a plan produced by plan-task through five lenses (Staff Engineer, Tech Lead, SRE, Security, QA). Invoke when the user says 'review the plan', 'check the plan', 'critique the plan', 'EM review', 'staff engineer review', or after plan-task produces a plan and before delegating to an executor agent."
+description: "Review methodology tool that applies five plan review lenses (Staff Engineer, Tech Lead, SRE, Security, QA). Accepts a plan path, produces structured findings, and writes a review file. Used internally by the plan-reviewer agent."
 ---
 
 > Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
@@ -98,11 +98,11 @@ Brief note per lens (even when no findings) so the orchestrator can see what was
 Either: "Apply the rewrites above to plan-{plan-id}.md, then re-invoke review-plan" OR "Proceed to delegate to {agent}".
 ```
 
-## Step 5 — Return and gate
+## Step 5 — Return findings
 
-Tell the user the review filename and the verdict in one short sentence. **Do NOT print the full review to chat** — context stays clean. Ask the user explicitly whether to:
+Return to the caller:
+- Verdict (one word)
+- Review file path
+- Finding counts: `Blockers: N | Majors: N | Minors: N | Nits: N`
 
-- Apply the suggested rewrites to the plan and re-invoke `review-plan`, or
-- Proceed with delegation to the recommended executor agent.
-
-This is a hard gate. Do not proceed without an explicit user answer.
+Do NOT print the full review file content to chat.
