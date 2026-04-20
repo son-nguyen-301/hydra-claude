@@ -58,3 +58,5 @@ Follow the [Shared: Writing the plan](#shared-writing-the-plan) section below.
 Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Use the `plan-{id}.md` template from `workspace-templates.md`.
 
 Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+
+Once the user approves the parent plan, invoke the `split-plan` skill with the plan path. The `split-plan` skill handles decomposition into sub-plans, the sub-plan approval loop, parallel execution in waves, and the final code review. Do NOT directly invoke a subagent — that is now the responsibility of `split-plan`.

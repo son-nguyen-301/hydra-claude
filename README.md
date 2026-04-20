@@ -119,7 +119,8 @@ hydra-claude/
 │   ├── read-jira/           # Fetches Jira ticket details
 │   ├── read-confluence/     # Fetches Confluence page content
 │   ├── write-confluence/    # Creates or updates Confluence pages
-│   └── review-code/         # Post-implementation code review via code-reviewer agent
+│   ├── review-code/         # Post-implementation code review via code-reviewer agent
+│   └── split-plan/          # Decomposes plans into parallel subtasks
 ├── tests/
 │   └── run.sh               # Test runner
 ├── CLAUDE.md                # Orchestrator rules (plan-first, no direct edits)
@@ -144,18 +145,23 @@ Orchestrator (main Claude instance)
     │
     ├─ (Optional) Runs review-plan skill → writes plan-reviews/review-NNN.md
     │
-    ├─ User approves plan
+    ├─ User approves parent plan
     │
-    └─ Invokes subagent with plan path only
+    └─ Runs split-plan skill → decomposes into sub-plans
            │
-           ├─ sprinter  (trivial / low complexity)
-           ├─ builder   (medium / high complexity)
-           └─ architect (expert complexity)
+           ├─ Presents dependency/wave table → User approves sub-plans
+           │   (loop: user may request changes to any sub-plan; update and re-present until approved)
+           │
+           └─ Orchestrates parallel execution in waves
                   │
-                  └─ Reads plan → edits files → writes task summary
+                  ├─ Wave 1: independent subtasks run in parallel
+                  │       └─ sprinter / builder / architect (per subtask complexity)
+                  ├─ Wave 2: subtasks whose Wave-1 dependencies completed
+                  │       └─ ...
+                  └─ Wave N: ...
                          │
                          ▼
-               review-code skill → spawns code-reviewer agent
+               review-code skill → spawns code-reviewer agent (unified review)
                          │
                          ├─ Approve       → task complete
                          ├─ Fix-required  → executor re-applies fixes
@@ -172,14 +178,14 @@ The plugin registers the following hooks automatically:
 |------|---------|-------------|
 | `inject-learned.sh` | SessionStart (once per new session) | Reads plugin CLAUDE.md and `~/.claude/projects/<slug>/memory/learned.md`; injects both as additional system context |
 | `post-compact.sh` | PostCompact | Re-injects plugin rules and learned patterns after context compaction so rules are never lost |
-| `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 4-line rule reminder to every message to prevent rule drift over long sessions |
+| `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 5-rule reminder to every message to prevent rule drift over long sessions |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
 | `statusline.sh` | StatusLine (Claude Code) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
 
 **Rule enforcement behaviors:**
 
 - **Rule Re-injection (PostCompact)**: After context compaction, all plugin rules and learned patterns are automatically re-injected into the context, ensuring rules survive the `/compact` operation.
-- **Per-Turn Rule Reminder (UserPromptSubmit)**: A condensed 4-line rule reminder is prepended to every user message to prevent rule drift over long sessions.
+- **Per-Turn Rule Reminder (UserPromptSubmit)**: A condensed 5-rule reminder is prepended to every user message to prevent rule drift over long sessions.
 The active enforcement layers are context reinjection at session start and after compaction, plus the per-turn reminder on every user prompt.
 
 ### Status line
@@ -323,6 +329,17 @@ Writes the review to `~/.claude/projects/<slug>/code-reviews/review-{plan-id}.md
 | `Approve` | Zero Blockers, zero Majors — task is done |
 | `Fix-required` | Zero Blockers, one or more Majors — apply fixes then re-review |
 | `Rework` | One or more Blockers — re-plan or escalate |
+
+### `split-plan`
+
+Decomposes a parent plan into smaller subtasks with explicit dependencies, then orchestrates parallel execution. Independent subtasks run in parallel; dependent subtasks wait for their dependencies to complete first.
+
+```
+/hydra-claude:split-plan 042
+/hydra-claude:split-plan ~/.claude/projects/<slug>/plans/plan-042.md
+```
+
+Writes subtask plans to `~/.claude/projects/<slug>/plans/` and coordinates execution in waves. A subtask marked as `Partial` indicates some of its subtasks succeeded while others failed.
 
 ---
 

@@ -49,10 +49,12 @@ After writing the task summary, append an execution record to the bottom of the 
 ```markdown
 ---
 ## Execution record
-Status: Done | Failed
+Status: Done | Failed | Partial
 Task summary: ~/.claude/projects/<slug>/tasks/task-{plan-id}.md
 Completed-at: {ISO8601 timestamp}
 Agent: {sprinter|builder|architect}
 ```
+
+`Partial` is used by `split-plan` when some subtasks succeed and others fail.
 
 If the plan file is not found (free-text task), skip this step. If the section already exists (retry / re-run), replace it rather than duplicating.

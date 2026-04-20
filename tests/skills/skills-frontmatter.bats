@@ -333,3 +333,29 @@ _check_skill_description_length() {
 @test "skills/review-code: description >= 40 chars" {
   _check_skill_description_length review-code
 }
+
+# ── split-plan ─────────────────────────────────────────────────────────────────
+
+@test "skills/split-plan: SKILL.md exists" {
+  _check_skill_file_exists split-plan
+}
+
+@test "skills/split-plan: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start split-plan
+}
+
+@test "skills/split-plan: has name: field in frontmatter" {
+  _check_skill_has_name split-plan
+}
+
+@test "skills/split-plan: has description: field in frontmatter" {
+  _check_skill_has_description split-plan
+}
+
+@test "skills/split-plan: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty split-plan
+}
+
+@test "skills/split-plan: description >= 40 chars" {
+  _check_skill_description_length split-plan
+}

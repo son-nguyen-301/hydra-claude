@@ -25,6 +25,29 @@ This file contains all output and document templates used by skills and agents. 
 ## Risks / open questions
 ```
 
+### sub-plan-{parent-id}-{letter}.md
+
+```markdown
+# Sub-plan {parent-id}-{letter}: {title}
+
+## Parent plan
+plan-{parent-id}.md
+
+## Dependencies
+{list of sub-plan letter IDs this depends on, or "None"}
+
+## Context / Requirements
+
+## Complexity: {trivial|low|medium|high|expert}
+## Suggested agent: {sprinter|builder|architect}
+
+## Implementation steps
+
+## Files to create / edit
+
+## Verification
+```
+
 ### debug-report-{id}.md
 
 ```markdown
