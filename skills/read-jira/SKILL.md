@@ -29,6 +29,8 @@ Return all of the following fields (when present):
 - Assignee
 - Reporter
 - Comments
-- Linked issues (blockers, relates-to, duplicates)
+- Subtasks (key and status)
+- Parent (key)
+- Linked issues (blockers, relates-to, duplicates; include blocker status/resolution when fetched)
 
 If MCP tools are unavailable, return a clear failure message.

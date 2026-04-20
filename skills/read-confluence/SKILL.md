@@ -13,7 +13,7 @@ description: "This skill should be used when the user provides a Confluence page
 ## Procedure
 
 **Step 1 — Fetch the page**
-Call `getConfluencePage` with the extracted page ID.
+Call `getConfluencePage` with the resolved numeric page ID.
 
 **Step 2 — Fetch child pages (when relevant)**
 If the page is a parent/index page or the user needs the full section, call `getConfluencePageDescendants` to retrieve child pages. Return child page titles and IDs so the user can request specific children.

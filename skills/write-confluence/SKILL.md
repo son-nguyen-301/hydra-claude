@@ -6,9 +6,14 @@ description: "Write or update Confluence pages. Invoke when the user says 'publi
 ## Procedure
 
 **Step 1 — Determine create vs update**
-If a page identifier (ID, URL, or title + space) was provided, call `getConfluencePage` first to check if the page exists.
+If a page identifier was provided, resolve it to a numeric page ID first:
+- Numeric ID: use as-is.
+- Confluence URL: extract the page ID from the URL path (see `read-confluence` skill for URL shapes).
+- Title + space key: call `searchConfluence` with the title and space to locate the page ID.
+
+Then call `getConfluencePage` with the resolved page ID to check if the page exists.
 - If found: proceed to update (Step 2a).
-- If not found: proceed to create (Step 2b).
+- If not found or no identifier was provided: proceed to create (Step 2b).
 
 **Step 2a — Update existing page**
 Call `updateConfluencePage` with the page ID and version set to the current version + 1 (from the `getConfluencePage` response). Pass the content in Confluence storage format (XHTML).

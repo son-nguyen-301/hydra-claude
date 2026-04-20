@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: "Use this skill to review a completed implementation through seven lenses (Plan Compliance, Correctness, Security, Conventions, Edge Cases, Test Quality, Code Quality). Invoke when the user says 'review the code', 'check the implementation', 'code review', or automatically after a subagent completes implementation."
+description: "Use this skill to review a completed implementation through seven lenses (Plan Compliance, Correctness, Security, Conventions, Edge Cases, Test Quality, Code Quality). Invoke when the user says 'review the code', 'check the implementation', 'code review'."
 ---
 
 > Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.

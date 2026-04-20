@@ -60,9 +60,9 @@ Use these as anchors when triangulating novel findings. When in doubt between Bl
 **Severity:** Blocker
 **Lens:** Plan Compliance
 **File:** `.claude-plugin/plugin.json`
-**Observation:** The plan's Step 6 requires adding `"./agents/code-reviewer.md"` to the `agents` array in `plugin.json`. The file was not modified — the agents array still contains only the original four entries. The `code-reviewer` agent is silently unregistered.
-**Suggested fix:** Add `"./agents/code-reviewer.md"` to the `agents` array in `.claude-plugin/plugin.json`. The array should read: `["./agents/architect.md", "./agents/sprinter.md", "./agents/builder.md", "./agents/doc-writer.md", "./agents/code-reviewer.md"]`.
-**Rationale:** An unregistered agent cannot be invoked by Claude Code. Every user of the `review-code` skill will hit a silent failure at Step 2. The fix is one line but the impact of omission is total.
+**Observation:** The plan's Step 6 requires adding a new agent file to the `agents` array in `plugin.json`. The file was not modified — the agents array is missing the new entry. The agent is silently unregistered.
+**Suggested fix:** Add the agent path to the `agents` array in `.claude-plugin/plugin.json` so it matches the plan's specification.
+**Rationale:** An unregistered agent cannot be invoked by Claude Code. Every user of the skill that depends on it will hit a silent failure. The fix is one line but the impact of omission is total.
 **Effort:** Low
 
 ---
@@ -242,15 +242,15 @@ Use these as anchors when triangulating novel findings. When in doubt between Bl
 **Severity:** Major
 **Lens:** Test Quality
 **File:** `tests/config/validate-json.bats`
-**Observation:** The plan requires adding a test that verifies the `agents` array in `plugin.json` includes `code-reviewer.md`. This test is absent. The existing test only checks that the agents array is non-empty — it would pass even if `code-reviewer.md` was never added to `plugin.json`.
-**Suggested fix:** Add the following test block:
+**Observation:** If the plan requires adding a test that verifies the `agents` array in `plugin.json` includes a specific agent entry (e.g., `code-reviewer.md`), a non-empty check alone would still pass even if that entry were omitted.
+**Suggested fix:** Add a specific-entry assertion alongside the non-empty check:
 ```bash
 @test "plugin.json: agents array includes code-reviewer.md" {
   run jq -e '.agents[] | select(. == "./agents/code-reviewer.md")' "$PLUGIN_JSON"
   assert_success
 }
 ```
-**Rationale:** The non-empty check provides false confidence. The specific-entry check is the only assertion that would catch the regression where a developer adds `code-reviewer` to code but forgets to register it in `plugin.json`. This is one of the most common integration gaps in plugin development.
+**Rationale:** A non-empty check provides false confidence. A specific-entry assertion is the only test that would catch the regression where a developer adds a new agent to code but forgets to register it in the manifest. This is one of the most common integration gaps in plugin development.
 **Effort:** Low
 
 ---

@@ -12,7 +12,7 @@ Determine if this is a **Coding Task** or a **Bug Fixing Task**.
 ### Coding Task
 
 **Step 1 — Gather requirements**
-Gather requirements from the current conversation. If a Jira ticket URL is provided, invoke the `read-jira` skill to fetch it. If a Confluence page URL is provided, invoke the `read-confluence` skill to fetch it. Clarify until requirements are unambiguous. NEVER assume — ask the user if anything is unclear.
+Gather requirements from the current conversation. If a Jira ticket reference is provided, invoke the `read-jira` skill to fetch it. If a Confluence page reference is provided, invoke the `read-confluence` skill to fetch it. Clarify until requirements are unambiguous. NEVER assume — ask the user if anything is unclear.
 
 **Step 2 — Locate the implementation area**
 Locate the implementation area using GitNexus MCP tools. If unavailable, use Grep, Glob, Read.

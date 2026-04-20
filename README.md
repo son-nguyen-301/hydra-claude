@@ -79,6 +79,7 @@ Replace `/Users/<you>` with your actual home directory path.
 
 ```bash
 cp -r ~/.hydra-claude/projects/ ~/.claude/projects-backup-hydra
+mkdir -p ~/.claude/projects
 mv ~/.hydra-claude/projects/*/ ~/.claude/projects/
 ```
 

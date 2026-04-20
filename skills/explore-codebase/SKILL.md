@@ -53,7 +53,7 @@ If the project exposes tools (MCP server, RPC), call `tool_map` to list all tool
 
 **Step 2 — Read key files for conventions**
 
-Read a representative set of files using the file paths surfaced by GitNexus. Focus on:
+Read a representative set of files from GitNexus output when available, or choose representative files directly from the repository tree if GitNexus is unavailable. Focus on:
 - Coding conventions and style (a few typical implementation files)
 - Tech stack and dependencies (`package.json`, `go.mod`, `pyproject.toml`, etc.)
 - Testing patterns (a test file or two)
