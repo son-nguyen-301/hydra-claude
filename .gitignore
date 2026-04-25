@@ -1,3 +1,6 @@
 .claude/tasks
 .claude/plans
 .claude/scheduled_tasks.lock
+CLAUDE_PROMPT.md
+CODEX.md
+FACTORY_AI.md

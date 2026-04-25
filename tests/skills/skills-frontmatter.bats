@@ -359,3 +359,29 @@ _check_skill_description_length() {
 @test "skills/split-plan: description >= 40 chars" {
   _check_skill_description_length split-plan
 }
+
+# ── enhance-prompt ─────────────────────────────────────────────────────────────
+
+@test "skills/enhance-prompt: SKILL.md exists" {
+  _check_skill_file_exists enhance-prompt
+}
+
+@test "skills/enhance-prompt: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start enhance-prompt
+}
+
+@test "skills/enhance-prompt: has name: field in frontmatter" {
+  _check_skill_has_name enhance-prompt
+}
+
+@test "skills/enhance-prompt: has description: field in frontmatter" {
+  _check_skill_has_description enhance-prompt
+}
+
+@test "skills/enhance-prompt: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty enhance-prompt
+}
+
+@test "skills/enhance-prompt: description >= 40 chars" {
+  _check_skill_description_length enhance-prompt
+}

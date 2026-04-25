@@ -343,6 +343,17 @@ Decomposes a parent plan into smaller subtasks with explicit dependencies, then 
 
 Writes subtask plans to `~/.claude/projects/<slug>/plans/` and coordinates execution in waves. A subtask marked as `Partial` indicates some of its subtasks succeeded while others failed.
 
+### `enhance-prompt`
+
+Analyzes a prompt against seven best-practice dimensions (clarity, context, constraints, acceptance criteria, structure, verification, scope) and presents an enhanced version for review.
+
+```
+/enhance-prompt Add caching to the API
+/enhance-prompt Refactor the auth module
+```
+
+The skill classifies the prompt first: trivial or already well-structured prompts are skipped with an explanation. For prompts that need improvement, it identifies the gaps, rewrites the prompt incorporating missing elements, and asks: **"Use this enhanced prompt? (yes / no / edit)"**
+
 ---
 
 ## Execution roles
