@@ -64,3 +64,5 @@ Read the repo for any existing rule files (e.g., `.eslintrc`, `prettier.config.*
 
 **Step 3 — Save to shared memory**
 Compute `<slug>` from CWD. Write findings to `~/.claude/projects/<slug>/memory/codebase-knowledge.md` following the `codebase-knowledge.md` outline from the shared reference. Create the directory if needed. Return the path.
+
+Note: The memory directory also stores `MEMORY.md` (index) and `patterns-*.md` (topic files) for learned patterns and conventions, as documented in `skills/_shared/workspace-core.md`.

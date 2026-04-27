@@ -90,6 +90,38 @@ The `explore-codebase` skill produces a file following this outline:
 13. Gotchas / learned patterns
 14. Task completion checklist
 
+### MEMORY.md index template
+
+```markdown
+# Memory Index
+
+- [{Category name}]({filename}.md) — {scope summary from the file's scope field}
+```
+
+Each line points to a topic file. The description after `—` is the scope summary used for routing decisions. Categories are not predefined — they emerge dynamically based on project content.
+
+### Topic file template
+
+```markdown
+---
+scope: "{1-2 sentence description of what belongs in this file}"
+not: "{What does NOT belong — prevents category from becoming a dumping ground}"
+anchors:
+  - "{Example entry title 1 — representative of this category}"
+  - "{Example entry title 2}"
+---
+
+## {Rule title}
+
+{Description of the pattern or convention.}
+
+**Why:** {Explanation of why this matters, with context.}
+
+---
+```
+
+Note on `---` delimiters: The YAML frontmatter is delimited by the first two `---` lines at the top of the file. The `---` lines between entries (separating `## heading` blocks) are entry separators and are distinguished by position — they appear between entries, not at the top of the file.
+
 ### code-review-{plan-id}.md
 
 ```markdown

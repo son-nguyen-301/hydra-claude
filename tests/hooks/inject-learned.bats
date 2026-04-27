@@ -5,9 +5,18 @@ load '../test_helper'
 
 INJECT_LEARNED_HOOK="$ROOT/hooks/inject-learned.sh"
 
-# Helper: compute the workspace slug from a project dir path
+# Helper: compute the workspace slug from a project dir path and return path to MEMORY.md
 # (same formula as inject-learned.sh: replace all '/' with '-')
 _workspace_for() {
+  local project_dir="$1"
+  local home_dir="$2"
+  local slug
+  slug=$(echo "$project_dir" | tr '/' '-')
+  echo "$home_dir/.claude/projects/$slug/memory/MEMORY.md"
+}
+
+# Helper: return path to learned.md (for fallback tests)
+_learned_for() {
   local project_dir="$1"
   local home_dir="$2"
   local slug
@@ -26,7 +35,7 @@ _workspace_for() {
   assert_output ""
 }
 
-@test "inject-learned: missing learned.md exits 0" {
+@test "inject-learned: missing MEMORY.md exits 0" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
   local payload
@@ -35,7 +44,7 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: missing learned.md produces valid JSON" {
+@test "inject-learned: missing MEMORY.md produces valid JSON" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
   local payload
@@ -44,7 +53,7 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: missing learned.md injects plugin rules" {
+@test "inject-learned: missing MEMORY.md injects plugin rules" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
   local payload
@@ -54,13 +63,13 @@ _workspace_for() {
   assert_output --partial "PLUGIN RULES"
 }
 
-@test "inject-learned: empty learned.md exits 0" {
+@test "inject-learned: empty MEMORY.md exits 0" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  touch "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  touch "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -68,13 +77,13 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: empty learned.md produces valid JSON" {
+@test "inject-learned: empty MEMORY.md produces valid JSON" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  touch "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  touch "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -82,13 +91,13 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: empty learned.md injects plugin rules" {
+@test "inject-learned: empty MEMORY.md injects plugin rules" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  touch "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  touch "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -97,13 +106,13 @@ _workspace_for() {
   assert_output --partial "PLUGIN RULES"
 }
 
-@test "inject-learned: with content exits 0" {
+@test "inject-learned: with MEMORY.md content exits 0" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -114,10 +123,10 @@ _workspace_for() {
 @test "inject-learned: output is valid JSON" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -128,10 +137,10 @@ _workspace_for() {
 @test "inject-learned: hookEventName == SessionStart" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -140,13 +149,13 @@ _workspace_for() {
   assert_output "SessionStart"
 }
 
-@test "inject-learned: additionalContext contains file content" {
+@test "inject-learned: additionalContext contains MEMORY.md file content" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -155,13 +164,13 @@ _workspace_for() {
   assert_output --partial "Always use immutable patterns."
 }
 
-@test "inject-learned: plugin rules + learned exits 0" {
+@test "inject-learned: plugin rules + MEMORY.md exits 0" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -169,13 +178,13 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: plugin rules + learned output is valid JSON" {
+@test "inject-learned: plugin rules + MEMORY.md output is valid JSON" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -186,10 +195,10 @@ _workspace_for() {
 @test "inject-learned: additionalContext contains plugin rules header" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -198,28 +207,28 @@ _workspace_for() {
   assert_output --partial "PLUGIN RULES — TOP PRIORITY"
 }
 
-@test "inject-learned: additionalContext contains learned patterns header" {
+@test "inject-learned: additionalContext contains memory index framing" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
   assert_success
-  assert_output --partial "Repo-specific learned patterns"
+  assert_output --partial "Memory index"
 }
 
-@test "inject-learned: additionalContext contains learned.md content" {
+@test "inject-learned: additionalContext contains MEMORY.md content" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -231,10 +240,10 @@ _workspace_for() {
 @test "inject-learned: additionalContext contains separator" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
-  local LEARNED_FILE
-  LEARNED_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
-  mkdir -p "$(dirname "$LEARNED_FILE")"
-  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$LEARNED_FILE"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
 
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
@@ -263,7 +272,7 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: no orphan learned patterns header when only plugin rules present" {
+@test "inject-learned: no orphan memory patterns header when only plugin rules present" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
 
@@ -271,7 +280,7 @@ _workspace_for() {
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
   assert_success
-  refute_output --partial "Repo-specific learned patterns"
+  refute_output --partial "Memory index"
 }
 
 @test "inject-learned: health-check emits warning when no rules found" {
@@ -288,7 +297,7 @@ _workspace_for() {
   assert_output --partial "WARNING [inject-learned]"
 }
 
-@test "inject-learned: no learned.md exits 0" {
+@test "inject-learned: no MEMORY.md exits 0" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
 
@@ -298,7 +307,7 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: no learned.md produces valid JSON" {
+@test "inject-learned: no MEMORY.md produces valid JSON" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
 
@@ -308,7 +317,7 @@ _workspace_for() {
   assert_success
 }
 
-@test "inject-learned: no learned.md injects plugin rules" {
+@test "inject-learned: no MEMORY.md injects plugin rules" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
 
@@ -319,7 +328,7 @@ _workspace_for() {
   assert_output --partial "PLUGIN RULES"
 }
 
-@test "inject-learned: no orphan learned patterns header when no learned.md" {
+@test "inject-learned: no orphan memory patterns header when no MEMORY.md" {
   setup_isolated_home
   local PROJECT_DIR="/some/test/project"
 
@@ -327,5 +336,30 @@ _workspace_for() {
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
   run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
   assert_success
-  refute_output --partial "Repo-specific learned patterns"
+  refute_output --partial "Memory index"
+}
+
+@test "inject-learned: falls back to learned.md when MEMORY.md absent" {
+  setup_isolated_home
+  local PROJECT_DIR="/some/test/project"
+  local LEARNED_FILE
+  LEARNED_FILE=$(_learned_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$LEARNED_FILE")"
+  printf 'Fallback pattern from learned.md.\n' > "$LEARNED_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+
+  # Capture combined stdout+stderr for stderr check
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>"$4/inject_learned_stderr"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK" "$BATS_TEST_TMPDIR"
+  assert_success
+
+  # Output should contain learned.md content
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "Fallback pattern from learned.md."
+
+  # stderr should contain fallback notice
+  run bash -c 'cat "$1/inject_learned_stderr"' _ "$BATS_TEST_TMPDIR"
+  assert_output --partial "NOTICE [inject-learned]: MEMORY.md not found, falling back to learned.md"
 }

@@ -18,7 +18,7 @@ Directory layout:
 | `plans/`           | Task plans created by `plan-task`        |
 | `tasks/`           | Task summaries written by executor agents|
 | `debug-findings/`  | Debug reports written by the `debug` skill|
-| `memory/`          | `learned.md` and `codebase-knowledge.md` |
+| `memory/`          | `MEMORY.md` (index), `patterns-*.md` (topic files), `codebase-knowledge.md` |
 | `docs/`            | Documents produced by `doc-writer`       |
 | `plan-reviews/`    | Plan reviews written by `review-plan` skill   |
 | `code-reviews/`    | Code reviews written by `code-reviewer` agent |
