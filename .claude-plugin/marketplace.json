@@ -9,7 +9,7 @@
     {
       "name": "hydra-claude",
       "description": "Token tracking, context compaction, and curated development agents and skills.",
-      "version": "2.8.0",
+      "version": "2.9.0",
       "source": "./",
       "author": {
         "name": "Nguyen Hai Son"
@@ -17,8 +17,18 @@
       "homepage": "https://github.com/son-nguyen-301/hydra-claude",
       "repository": "https://github.com/son-nguyen-301/hydra-claude",
       "license": "MIT",
-      "keywords": ["agents", "planning", "token-tracking", "workflow", "jira", "confluence"],
-      "tags": ["development", "productivity"],
+      "keywords": [
+        "agents",
+        "planning",
+        "token-tracking",
+        "workflow",
+        "jira",
+        "confluence"
+      ],
+      "tags": [
+        "development",
+        "productivity"
+      ],
       "category": "development",
       "strict": false
     }
