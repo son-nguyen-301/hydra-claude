@@ -1,6 +1,6 @@
 ---
 name: review-plan
-description: "Used internally by the plan-reviewer agent. Review methodology tool that applies five plan review lenses (Staff Engineer, Tech Lead, SRE, Security, QA). Accepts a plan path, produces structured findings, and writes a review file."
+description: "Mandatory step in the standard workflow. Invoked by the plan-reviewer agent during automatic plan review. Review methodology tool that applies five plan review lenses (Staff Engineer, Tech Lead, SRE, Security, QA). Accepts a plan path, produces structured findings, and writes a review file."
 ---
 
 > Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.

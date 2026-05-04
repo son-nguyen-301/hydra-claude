@@ -100,6 +100,8 @@ The `explore-codebase` skill produces a file following this outline:
 
 Each line points to a topic file. The description after `—` is the scope summary used for routing decisions. Categories are not predefined — they emerge dynamically based on project content.
 
+Plugin memory files are stored in `memory/plugin/`. The MEMORY.md index and all topic files live in this subdirectory.
+
 ### Topic file template
 
 ```markdown

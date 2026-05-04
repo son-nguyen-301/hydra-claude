@@ -30,6 +30,12 @@ USER_PROMPT_SUBMIT_HOOK="$ROOT/hooks/user-prompt-submit.sh"
   assert_output --partial "split-plan"
 }
 
+@test "user-prompt-submit: additionalContext mentions plan-reviewer" {
+  run bash -c 'echo "{}" | bash "$1" | jq -r ".hookSpecificOutput.additionalContext"' _ "$USER_PROMPT_SUBMIT_HOOK"
+  assert_success
+  assert_output --partial "plan-reviewer"
+}
+
 @test "user-prompt-submit: exits 0" {
   run bash -c 'echo "{}" | bash "$1" > /dev/null' _ "$USER_PROMPT_SUBMIT_HOOK"
   assert_success

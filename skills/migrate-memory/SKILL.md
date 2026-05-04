@@ -1,19 +1,26 @@
 ---
 name: migrate-memory
-description: "Migrate a project's learned.md into the MEMORY.md index + categorized topic files structure. Invoke when the user says 'migrate memory', 'split learned.md', 'upgrade memory', or when the inject-learned hook emits a fallback notice."
+description: "Legacy migration tool for v2.8→v2.9 upgrades. Migrates a project's learned.md into the MEMORY.md index + categorized topic files structure. Most users do not need this."
 ---
 
 > Workspace path, slug computation, ID scheme, and output templates are defined in `skills/_shared/workspace-core.md` and `skills/_shared/workspace-templates.md`. Read both files first.
 
+## Step 0 — Create memory/plugin/ directory
+
+Create the `memory/plugin/` directory if it doesn't exist:
+```bash
+mkdir -p ~/.claude/projects/<slug>/memory/plugin/
+```
+
 ## Step 1 — Compute workspace path
 
-Reference `skills/_shared/workspace-core.md` for slug computation. Compute `<slug>` from CWD. Set `MEMORY_DIR=~/.claude/projects/<slug>/memory/`.
+Reference `skills/_shared/workspace-core.md` for slug computation. Compute `<slug>` from CWD. Set `MEMORY_DIR=~/.claude/projects/<slug>/memory/plugin/`.
 
 ## Step 2 — Pre-flight checks
 
-- Read `$MEMORY_DIR/learned.md`. If it doesn't exist, inform the user: "No learned.md found at {path} — nothing to migrate." and stop.
-- Check if `$MEMORY_DIR/MEMORY.md` already exists. If yes, warn the user: "MEMORY.md already exists. This will overwrite existing topic files for categories found in learned.md." Ask whether to proceed or abort.
-- Check if `$MEMORY_DIR/learned.md.bak` already exists. If yes, warn: "learned.md.bak already exists from a previous migration. Remove it to proceed." Ask whether to delete it and continue, or abort.
+- Read `~/.claude/projects/<slug>/memory/learned.md` (root level). If it doesn't exist, inform the user: "No learned.md found at {path} — nothing to migrate." and stop.
+- Check if `$MEMORY_DIR/MEMORY.md` (i.e., `memory/plugin/MEMORY.md`) already exists. If yes, warn the user: "MEMORY.md already exists. This will overwrite existing topic files for categories found in learned.md." Ask whether to proceed or abort.
+- Check if `~/.claude/projects/<slug>/memory/learned.md.bak` already exists. If yes, warn: "learned.md.bak already exists from a previous migration. Remove it to proceed." Ask whether to delete it and continue, or abort.
 
 ## Step 3 — Parse entries
 
@@ -54,7 +61,7 @@ Reference the MEMORY.md index template from `skills/_shared/workspace-templates.
 
 ## Step 7 — Backup original
 
-Rename `learned.md` to `learned.md.bak` using Bash `mv`.
+Rename `~/.claude/projects/<slug>/memory/learned.md` to `~/.claude/projects/<slug>/memory/learned.md.bak` using Bash `mv`.
 
 ## Step 8 — Report summary
 
@@ -62,4 +69,4 @@ Print a summary to the user:
 - Total entries migrated
 - Topic files created with entry counts
 - Path to MEMORY.md
-- Reminder: "The inject-learned hook will now load MEMORY.md instead of learned.md."
+- Reminder: "The inject-learned hook will now load memory/plugin/MEMORY.md instead of learned.md."

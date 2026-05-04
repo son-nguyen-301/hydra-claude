@@ -18,7 +18,8 @@ Directory layout:
 | `plans/`           | Task plans created by `plan-task`        |
 | `tasks/`           | Task summaries written by executor agents|
 | `debug-findings/`  | Debug reports written by the `debug` skill|
-| `memory/`          | `MEMORY.md` (index), `patterns-*.md` (topic files), `codebase-knowledge.md` |
+| `memory/`          | Claude's native auto-memory (MEMORY.md, topic files) + `codebase-knowledge.md` |
+| `memory/plugin/`   | Plugin-managed memory: `MEMORY.md` (index), topic files with YAML frontmatter  |
 | `docs/`            | Documents produced by `doc-writer`       |
 | `plan-reviews/`    | Plan reviews written by `review-plan` skill   |
 | `code-reviews/`    | Code reviews written by `code-reviewer` agent |

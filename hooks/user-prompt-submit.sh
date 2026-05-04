@@ -9,7 +9,7 @@ if [ ! -f "$PLUGIN_RULES_FILE" ]; then
   exit 0
 fi
 
-REMINDER="RULE REMINDER: (1) Always use plan-task before any file changes. (2) After plan approval, use split-plan to decompose into sub-plans — it handles approval loop, parallel execution, and code review. (3) Never edit directly — execution is orchestrated by split-plan. (4) Pass only the plan file path to subagents, not the plan content. (5) Use the correct agent tier: trivial→sprinter, medium/high→builder, expert→architect."
+REMINDER="RULE REMINDER: (1) Always use plan-task before any file changes. (2) plan-task automatically spawns plan-reviewer — wait for its verdict before presenting the plan to the user. (3) After plan approval, use split-plan to decompose into sub-plans — it handles approval loop, parallel execution, and code review. (4) Never edit directly — execution is orchestrated by split-plan. (5) Pass only the plan file path to subagents, not the plan content. (6) Use the correct agent tier: trivial→sprinter, medium/high→builder, expert→architect."
 
 printf '%s' "$REMINDER" | jq -Rs '{
   hookSpecificOutput: {

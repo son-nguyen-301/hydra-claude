@@ -57,6 +57,21 @@ Follow the [Shared: Writing the plan](#shared-writing-the-plan) section below.
 
 Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Use the `plan-{id}.md` template from `workspace-templates.md`.
 
-Inform the user of the plan filename and the suggested subagent, then ask for approval. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+**Step 1 — Write the plan**
+Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
 
-Once the user approves the parent plan, invoke the `split-plan` skill with the plan path. The `split-plan` skill handles decomposition into sub-plans, the sub-plan approval loop, parallel execution in waves, and the final code review. Do NOT directly invoke a subagent — that is now the responsibility of `split-plan`.
+**Step 2 — Spawn the plan-reviewer agent (MANDATORY)**
+Spawn the `plan-reviewer` agent with the plan path. The plan-reviewer agent will invoke the review-plan skill internally, apply its six professional review behaviors, and return a verdict: `Approve`, `Approve-with-changes`, or `Revise`.
+
+**Step 3 — Handle the review verdict**
+
+- **Approve**: The plan is solid and ready. Inform the user that the plan passed review and is ready to proceed.
+- **Approve-with-changes**: The plan is generally good but has some suggestions for improvement. Present the major findings to the user and ask: "Should I apply these suggested rewrites to the plan before proceeding, or proceed with the current plan as-is?"
+  - If the user chooses to rewrite: apply the changes and re-run the plan-reviewer to confirm.
+  - If the user chooses to proceed: continue to Step 4 with the current plan.
+- **Revise**: The plan has blocking issues that must be resolved. Present the blockers to the user and offer: "I found issues that should be fixed before proceeding. Would you like me to re-plan with these findings as context?"
+  - If yes: incorporate the findings and return to Step 1.
+  - If no: proceed with the current plan at the user's risk.
+
+**Step 4 — User approval and execution**
+Ask the user for final approval to proceed with the plan. Once approved, invoke the `split-plan` skill with the plan path. The `split-plan` skill handles decomposition into sub-plans, the sub-plan approval loop, parallel execution in waves, and the final code review. Do NOT directly invoke a subagent — that is now the responsibility of `split-plan`.

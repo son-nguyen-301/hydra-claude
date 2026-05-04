@@ -102,8 +102,8 @@ hydra-claude/
 │   ├── code-reviewer.md     # Independent code review agent (Opus)
 │   └── plan-reviewer.md     # Independent plan review agent (Opus)
 ├── hooks/
-│   ├── inject-learned.sh       # SessionStart: injects plugin rules + MEMORY.md index
-│   ├── post-compact.sh         # PostCompact: re-injects plugin rules and learned patterns after compaction
+│   ├── inject-learned.sh       # SessionStart: injects plugin rules + MEMORY.md index; detects native auto-memory
+│   ├── post-compact.sh         # PostCompact: re-injects plugin rules and memory index; detects native auto-memory
 │   ├── user-prompt-submit.sh   # UserPromptSubmit: injects condensed rule reminder on every user turn
 │   ├── session-end-learn.sh    # Stop: prompts learn skill when session ends with significant activity
 │   └── statusline.sh           # StatusLine: displays tokens, cost, and rate limits
@@ -145,7 +145,7 @@ Orchestrator (main Claude instance)
     │
     ├─ Runs plan-task skill → writes ~/.claude/projects/<slug>/plans/plan-NNN.md
     │
-    ├─ (Optional) Runs review-plan skill → writes plan-reviews/review-NNN.md
+    ├─ Runs plan-reviewer agent → writes plan-reviews/review-NNN.md
     │
     ├─ User approves parent plan
     │
@@ -178,8 +178,8 @@ The plugin registers the following hooks automatically:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| `inject-learned.sh` | SessionStart (once per new session) | Injects MEMORY.md (memory index) and plugin CLAUDE.md as additional system context; with fallback to learned.md for un-migrated projects |
-| `post-compact.sh` | PostCompact | Re-injects plugin rules and memory index after context compaction so rules are never lost |
+| `inject-learned.sh` | SessionStart (once per new session) | Injects MEMORY.md (memory index) and plugin CLAUDE.md as additional system context; detects native auto-memory and skips plugin injection when active; fallback to learned.md for un-migrated projects |
+| `post-compact.sh` | PostCompact | Re-injects plugin rules and memory index after context compaction so rules are never lost; detects native auto-memory and skips when active |
 | `user-prompt-submit.sh` | UserPromptSubmit (every user turn) | Prepends a condensed 5-rule reminder to every message to prevent rule drift over long sessions |
 | `session-end-learn.sh` | Stop | Checks token activity at session end; prompts the `learn` skill to run if significant work was done |
 | `statusline.sh` | StatusLine (Claude Code) | Reads the statusLine JSON from Claude Code stdin; displays tokens, cost, and rate limit usage |
@@ -224,9 +224,9 @@ Analyzes a task, finds the relevant code area, assesses complexity, and writes a
 | Medium / high | `hydra-claude:builder` |
 | Expert | `hydra-claude:architect` |
 
-### `review-plan` (methodology tool — used internally by the plan-reviewer agent)
+### `review-plan` (automatically invoked by plan-reviewer agent)
 
-Review a plan produced by `plan-task` through five lenses (Staff Eng, Tech Lead, SRE, Security, QA) and emit a structured review with Blocker/Major/Minor/Nit findings + concrete rewrites. Writes the review to `~/.claude/projects/<slug>/plan-reviews/review-{plan-id}.md`.
+Review a plan produced by `plan-task` through five lenses (Staff Eng, Tech Lead, SRE, Security, QA) and emit a structured review with Blocker/Major/Minor/Nit findings + concrete rewrites. Writes the review to `~/.claude/projects/<slug>/plan-reviews/review-{plan-id}.md`. This is automatically invoked after plan-task completes.
 
 ```
 /hydra-claude:review-plan 042
@@ -252,7 +252,7 @@ Maps the project's structure, conventions, tech stack, and testing patterns. Wri
 
 ### `learn`
 
-Captures patterns into dynamically categorized topic files using semantic routing. The agent reads the MEMORY.md index and scope blocks to decide where each pattern belongs. Updates the MEMORY.md index automatically. Patterns are injected at every session start.
+Captures patterns into dynamically categorized topic files under `memory/plugin/` using semantic routing. The agent reads the `memory/plugin/MEMORY.md` index and scope blocks to decide where each pattern belongs. Updates the MEMORY.md index automatically. Patterns are injected at every session start.
 
 Run this at the end of a productive session:
 
@@ -354,9 +354,11 @@ Analyzes a prompt against seven best-practice dimensions (clarity, context, cons
 
 The skill classifies the prompt first: trivial or already well-structured prompts are skipped with an explanation. For prompts that need improvement, it identifies the gaps, rewrites the prompt incorporating missing elements, and asks: **"Use this enhanced prompt? (yes / no / edit)"**
 
-### `migrate-memory`
+### `migrate-memory` (deprecated)
 
-Migrates a project's `learned.md` into the MEMORY.md index + dynamically categorized topic files structure. This skill parses learned.md, uses semantic categorization to organize patterns by domain, writes to the appropriate topic files, and generates a MEMORY.md routing index. Available on any machine with the plugin installed.
+Migrates a project's `learned.md` into the MEMORY.md index + dynamically categorized topic files structure. This skill parses learned.md, uses semantic categorization to organize patterns by domain, writes to the appropriate topic files under `memory/plugin/`, and generates a MEMORY.md routing index. Available on any machine with the plugin installed.
+
+For new projects, use native auto-memory or the `learn` skill instead. Run this only if you have an existing `learned.md` to migrate.
 
 ```
 /hydra-claude:migrate-memory
@@ -375,7 +377,7 @@ Claude Code exposes these as registered agents.
 | `architect` | Expert implementation | System design decisions, complex refactors |
 | `doc-writer` | Documentation writing | Docs, design notes, Confluence updates |
 | `code-reviewer` | Independent code review (Opus) | Post-implementation review through 7 lenses + 6 professional behaviors; invoked directly by orchestrator |
-| `plan-reviewer` | Independent plan review (Opus) | Pre-execution plan review through 5 lenses + 6 professional behaviors; invoked directly by orchestrator |
+| `plan-reviewer` | Independent plan review (Opus) | Automatic plan review through 5 lenses + 6 professional behaviors; invoked directly by orchestrator after plan-task completes |
 
 ---
 
@@ -395,16 +397,26 @@ hydra-claude stores all workspace files outside the repo, in a shared Hydra work
     <topic-files>            — dynamically created topic files based on pattern content
     codebase-knowledge.md    — codebase map created by explore-codebase
     learned.md               — (deprecated) legacy patterns file for un-migrated projects
+    plugin/
+      MEMORY.md              — plugin memory index for structured patterns
+      <topic-files>          — plugin-managed topic files (patterns, corrections, workflows)
 ```
 
 **How memory works:**
 
+hydra-claude supports two complementary memory systems that coexist without conflict:
+
+- **Native auto-memory** (Claude Code built-in): handles organic discoveries automatically. When active, `inject-learned.sh` and `post-compact.sh` detect it and skip plugin memory injection to avoid duplication.
+- **Plugin memory** (`memory/plugin/`): handles structured patterns written explicitly by the `learn` skill or by Claude during a session. Use this for repo-specific conventions, user corrections, and validated non-obvious workflows.
+
+For plugin memory specifically:
+
 - **Categories are not predefined** — the agent creates them dynamically based on the content of each pattern.
 - Each topic file carries a **YAML frontmatter scope block** with `scope`, `not`, and `anchors` fields that help future agents route new patterns to the correct file.
-- **MEMORY.md** serves as an index/routing table pointing to topic files that emerge organically per project.
-- The `learn` skill uses semantic routing: it reads the MEMORY.md index and scope blocks in each topic file to decide where each pattern belongs.
-- Hooks inject MEMORY.md at session start; Claude reads topic files on-demand.
-- For existing projects with only `learned.md`, run `/hydra-claude:migrate-memory` (recommended) for automated migration.
+- **`memory/plugin/MEMORY.md`** serves as an index/routing table pointing to topic files that emerge organically per project.
+- The `learn` skill uses semantic routing: it reads the MEMORY.md index and scope blocks in each topic file to decide where each pattern belongs, and writes patterns to `memory/plugin/`.
+- Hooks inject `memory/plugin/MEMORY.md` at session start; Claude reads topic files on-demand.
+- For existing projects with only `learned.md`, run `/hydra-claude:migrate-memory` to migrate to the categorized topic files structure. Note: `migrate-memory` is deprecated for new projects — use native auto-memory or the `learn` skill instead.
 
 The slug is derived from the project's absolute CWD: every `/` is replaced with `-`. For example, `/Users/foo/bar` becomes `-Users-foo-bar`.
 

@@ -5,9 +5,18 @@ load '../test_helper'
 
 INJECT_LEARNED_HOOK="$ROOT/hooks/inject-learned.sh"
 
-# Helper: compute the workspace slug from a project dir path and return path to MEMORY.md
+# Helper: compute the workspace slug from a project dir path and return path to plugin/MEMORY.md
 # (same formula as inject-learned.sh: replace all '/' with '-')
 _workspace_for() {
+  local project_dir="$1"
+  local home_dir="$2"
+  local slug
+  slug=$(echo "$project_dir" | tr '/' '-')
+  echo "$home_dir/.claude/projects/$slug/memory/plugin/MEMORY.md"
+}
+
+# Helper: return path to memory/MEMORY.md (old path, for fallback tests)
+_old_workspace_for() {
   local project_dir="$1"
   local home_dir="$2"
   local slug
@@ -22,6 +31,13 @@ _learned_for() {
   local slug
   slug=$(echo "$project_dir" | tr '/' '-')
   echo "$home_dir/.claude/projects/$slug/memory/learned.md"
+}
+
+# Helper: write a settings.json with autoMemoryEnabled=false to HYDRA_FAKE_HOME
+_disable_native_automemory() {
+  local home_dir="$1"
+  mkdir -p "$home_dir/.claude"
+  printf '{"autoMemoryEnabled": false}\n' > "$home_dir/.claude/settings.json"
 }
 
 @test "inject-learned: no cwd exits 0" {
@@ -65,6 +81,7 @@ _learned_for() {
 
 @test "inject-learned: empty MEMORY.md exits 0" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -79,6 +96,7 @@ _learned_for() {
 
 @test "inject-learned: empty MEMORY.md produces valid JSON" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -93,6 +111,7 @@ _learned_for() {
 
 @test "inject-learned: empty MEMORY.md injects plugin rules" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -108,6 +127,7 @@ _learned_for() {
 
 @test "inject-learned: with MEMORY.md content exits 0" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -122,6 +142,7 @@ _learned_for() {
 
 @test "inject-learned: output is valid JSON" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -136,6 +157,7 @@ _learned_for() {
 
 @test "inject-learned: hookEventName == SessionStart" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -151,6 +173,7 @@ _learned_for() {
 
 @test "inject-learned: additionalContext contains MEMORY.md file content" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -166,6 +189,7 @@ _learned_for() {
 
 @test "inject-learned: plugin rules + MEMORY.md exits 0" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -180,6 +204,7 @@ _learned_for() {
 
 @test "inject-learned: plugin rules + MEMORY.md output is valid JSON" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -194,6 +219,7 @@ _learned_for() {
 
 @test "inject-learned: additionalContext contains plugin rules header" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -209,6 +235,7 @@ _learned_for() {
 
 @test "inject-learned: additionalContext contains memory index framing" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -224,6 +251,7 @@ _learned_for() {
 
 @test "inject-learned: additionalContext contains MEMORY.md content" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -239,6 +267,7 @@ _learned_for() {
 
 @test "inject-learned: additionalContext contains separator" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local MEMORY_FILE
   MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -341,6 +370,7 @@ _learned_for() {
 
 @test "inject-learned: falls back to learned.md when MEMORY.md absent" {
   setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
   local PROJECT_DIR="/some/test/project"
   local LEARNED_FILE
   LEARNED_FILE=$(_learned_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
@@ -350,16 +380,99 @@ _learned_for() {
   local payload
   payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
 
-  # Capture combined stdout+stderr for stderr check
-  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>"$4/inject_learned_stderr"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK" "$BATS_TEST_TMPDIR"
-  assert_success
-
   # Output should contain learned.md content
   run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
   assert_success
   assert_output --partial "Fallback pattern from learned.md."
+}
 
-  # stderr should contain fallback notice
-  run bash -c 'cat "$1/inject_learned_stderr"' _ "$BATS_TEST_TMPDIR"
-  assert_output --partial "NOTICE [inject-learned]: MEMORY.md not found, falling back to learned.md"
+# --- New tests for native auto-memory detection ---
+
+@test "inject-learned: native automemory enabled skips plugin memory but injects rules" {
+  setup_isolated_home
+  # Write settings with autoMemoryEnabled: true (native is ON — plugin memory should be skipped)
+  mkdir -p "$HYDRA_FAKE_HOME/.claude"
+  printf '{"autoMemoryEnabled": true}\n' > "$HYDRA_FAKE_HOME/.claude/settings.json"
+
+  local PROJECT_DIR="/some/test/project"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Plugin pattern that should be skipped.\n' > "$MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "PLUGIN RULES"
+  refute_output --partial "Plugin pattern that should be skipped."
+}
+
+@test "inject-learned: native automemory disabled injects plugin memory" {
+  setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
+
+  local PROJECT_DIR="/some/test/project"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Plugin memory content injected.\n' > "$MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "PLUGIN RULES"
+  assert_output --partial "Plugin memory content injected."
+}
+
+@test "inject-learned: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 injects plugin memory" {
+  setup_isolated_home
+  local PROJECT_DIR="/some/test/project"
+  local MEMORY_FILE
+  MEMORY_FILE=$(_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Env-var-triggered memory injection.\n' > "$MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+  run bash -c 'echo "$1" | HOME="$2" CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "Env-var-triggered memory injection."
+}
+
+@test "inject-learned: fallback from plugin/MEMORY.md to memory/MEMORY.md" {
+  setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
+
+  local PROJECT_DIR="/some/test/project"
+  # Put content only at old path (memory/MEMORY.md), not plugin/MEMORY.md
+  local OLD_MEMORY_FILE
+  OLD_MEMORY_FILE=$(_old_workspace_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$OLD_MEMORY_FILE")"
+  printf 'Old memory path content.\n' > "$OLD_MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "Old memory path content."
+}
+
+@test "inject-learned: fallback from memory/MEMORY.md to learned.md" {
+  setup_isolated_home
+  _disable_native_automemory "$HYDRA_FAKE_HOME"
+
+  local PROJECT_DIR="/some/test/project"
+  # Put content only at learned.md, not at plugin/MEMORY.md or memory/MEMORY.md
+  local LEARNED_FILE
+  LEARNED_FILE=$(_learned_for "$PROJECT_DIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$LEARNED_FILE")"
+  printf 'Legacy learned.md content.\n' > "$LEARNED_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$PROJECT_DIR")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output --partial "Legacy learned.md content."
 }

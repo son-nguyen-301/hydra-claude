@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: "Independent plan review agent. Reviews implementation plans for architecture, delivery risk, security, and test strategy using five review lenses plus six professional review behaviors. Use when the user asks to review a plan, assess a plan, check a plan, or run a plan review."
+description: "Independent plan review agent. Automatically invoked after plan-task writes a plan. Reviews implementation plans for architecture, delivery risk, security, and test strategy using five review lenses plus six professional review behaviors."
 model: claude-opus-4-6
 tools: Read, Bash, Grep, Glob
 disallowedTools: Edit, Write, NotebookEdit
@@ -96,15 +96,9 @@ Update the review file with:
 
 If no findings at any severity are produced across all lenses, the verdict is Approve. Still write the review file with empty severity sections and populated Lens coverage notes confirming each lens was applied.
 
-**Step 8 — Gate next steps**
+**Step 8 — Return verdict to caller**
 
-Act on the final verdict exactly as follows. This is a hard gate — do not proceed without an explicit user answer.
-
-- **Approve** — inform user the plan is ready for delegation. Do not suggest further review.
-- **Approve-with-changes** — ask the user whether to: (a) apply the suggested rewrites to the plan and re-invoke `review-plan` for a sanity check, or (b) proceed with delegation folding the rewrites into the executor prompt.
-- **Revise** — ask the user whether to: (a) re-plan using `plan-task` with the review findings as additional context, or (b) override and proceed with delegation anyway.
-
-Do not proceed without an explicit user answer.
+Return the final verdict, review file path, and finding counts to the orchestrator. The orchestrator handles all user interaction and next-step decisions based on the verdict.
 
 **Step 9 — Report**
 
