@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: "Review methodology tool that applies seven code review lenses. Accepts a plan path, identifies changed files, produces structured findings, and writes a review file. Used internally by the code-reviewer agent."
+description: "Used internally by the code-reviewer agent. Review methodology tool that applies seven code review lenses. Accepts a plan path, identifies changed files, produces structured findings, and writes a review file."
 ---
 
 > Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.

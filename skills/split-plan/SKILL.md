@@ -17,6 +17,17 @@ Analyze the parent plan's implementation steps. Identify natural split points: g
 
 If no independent groups can be identified (all steps are tightly coupled), inform the user that the plan is not a good candidate for splitting and stop here. Do NOT force a split.
 
+### Dependency detection rules
+
+Apply these rules when determining dependencies between subtasks:
+
+- **File-level conflict**: if two subtasks edit the same file, they MUST be in different waves — the later one depends on the earlier.
+- **Type/interface dependency**: if subtask B uses a type or interface created by subtask A, B depends on A.
+- **Import chain**: if subtask B imports a module created or significantly modified by subtask A, B depends on A.
+- **Test dependency**: if subtask B writes tests for code created by subtask A, B depends on A.
+
+When in doubt about independence, add a dependency — false dependencies only slow execution, but missing dependencies cause merge conflicts or build failures.
+
 For each independent group (subtask), determine:
 
 | Field | What to decide |
