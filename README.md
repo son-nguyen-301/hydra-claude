@@ -354,6 +354,20 @@ Analyzes a prompt against seven best-practice dimensions (clarity, context, cons
 
 The skill classifies the prompt first: trivial or already well-structured prompts are skipped with an explanation. For prompts that need improvement, it identifies the gaps, rewrites the prompt incorporating missing elements, and asks: **"Use this enhanced prompt? (yes / no / edit)"**
 
+### `tdd`
+
+Opt-in TDD methodology for coding agents. When active, coding agents (sprinter, builder, architect) follow a strict RED→GREEN→REFACTOR cycle: write a failing test first, implement the minimum code to pass it, then refactor while tests stay green.
+
+This skill is **not applied automatically**. Trigger it by including any of these keywords in your request: `TDD`, `test-driven`, `red-green-refactor`, `write tests first`, `start with a failing test`.
+
+**RED→GREEN→REFACTOR in brief:**
+
+- **RED** — Write the smallest failing test that describes the next behaviour. Confirm it fails before writing any implementation.
+- **GREEN** — Write only enough code to make the test pass. Hardcoding is acceptable at this stage.
+- **REFACTOR** — Clean up while all tests remain green. Extract duplication, improve naming, tighten types.
+
+The skill is framework-agnostic — it applies regardless of whether the project uses a particular test runner or component framework. Framework-specific test setup follows the project's existing conventions.
+
 ### `migrate-memory` (deprecated)
 
 Migrates a project's `learned.md` into the MEMORY.md index + dynamically categorized topic files structure. This skill parses learned.md, uses semantic categorization to organize patterns by domain, writes to the appropriate topic files under `memory/plugin/`, and generates a MEMORY.md routing index. Available on any machine with the plugin installed.

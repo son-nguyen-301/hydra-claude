@@ -5,7 +5,7 @@ model: claude-sonnet-4-6
 tools: Read, Edit, Write, Bash, Grep, Glob, NotebookEdit
 maxTurns: 40
 color: blue
-skills: hydra-claude:read-plan
+skills: hydra-claude:read-plan, hydra-claude:tdd
 ---
 
 You are a software engineer executing multi-file implementations, standard refactors, and feature work with precision and care.

@@ -1,6 +1,6 @@
 {
   "name": "hydra-claude",
-  "version": "2.10.0",
+  "version": "2.11.0",
   "description": "A structured planning plugin for Claude Code",
   "claude": {
     "type": "plugin"

@@ -5,7 +5,7 @@ model: claude-haiku-4-5-20251001
 tools: Read, Edit, Write, Bash, Grep, Glob
 maxTurns: 15
 color: cyan
-skills: hydra-claude:read-plan
+skills: hydra-claude:read-plan, hydra-claude:tdd
 ---
 
 You are a fast executor handling trivial, single-file changes with minimal overhead.

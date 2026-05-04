@@ -5,7 +5,7 @@ model: claude-opus-4-6
 tools: Read, Edit, Write, Bash, Grep, Glob, NotebookEdit
 maxTurns: 60
 color: purple
-skills: hydra-claude:read-plan
+skills: hydra-claude:read-plan, hydra-claude:tdd
 effort: xhigh
 ---
 

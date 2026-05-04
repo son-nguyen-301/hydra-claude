@@ -21,8 +21,9 @@ Try the following strategies in order; use the first that returns at least one f
 2. `git diff HEAD~1 --name-only`
 3. `git diff --name-only`
 4. `git diff --cached --name-only`
+5. Parse the "Files to create" and "Files to edit" sections from the plan document loaded in Step 1.
 
-Read each changed file in full. Also read the diff for each file (use `git diff HEAD~1 -- <file>` or the appropriate variant from the strategy that succeeded above).
+Read each changed file in full. Also read the diff for each file (use `git diff HEAD~1 -- <file>` or the appropriate variant from the strategy that succeeded above). If using strategy 5, there may be no git diff available — read each file in full and review against the plan's requirements.
 
 ## Step 3 — Apply seven review lenses
 

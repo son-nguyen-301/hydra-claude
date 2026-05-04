@@ -385,3 +385,29 @@ _check_skill_description_length() {
 @test "skills/enhance-prompt: description >= 40 chars" {
   _check_skill_description_length enhance-prompt
 }
+
+# ── tdd ────────────────────────────────────────────────────────────────────────
+
+@test "skills/tdd: SKILL.md exists" {
+  _check_skill_file_exists tdd
+}
+
+@test "skills/tdd: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start tdd
+}
+
+@test "skills/tdd: has name: field in frontmatter" {
+  _check_skill_has_name tdd
+}
+
+@test "skills/tdd: has description: field in frontmatter" {
+  _check_skill_has_description tdd
+}
+
+@test "skills/tdd: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty tdd
+}
+
+@test "skills/tdd: description >= 40 chars" {
+  _check_skill_description_length tdd
+}
