@@ -3,7 +3,6 @@ name: builder
 description: "Use when the plan complexity is medium or high: multi-file implementations, standard refactors, bounded debugging, code reviews, feature work. Builder is the default workhorse agent for day-to-day development. Trigger when plan-task suggests builder or when the task spans multiple files but does not require architectural decisions."
 model: claude-sonnet-4-6
 tools: Read, Edit, Write, Bash, Grep, Glob, NotebookEdit
-maxTurns: 40
 color: blue
 skills: hydra-claude:read-plan, hydra-claude:tdd
 ---

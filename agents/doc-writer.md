@@ -3,7 +3,6 @@ name: doc-writer
 description: "Use when the user needs documentation written: HLDs, LLDs, ADRs, runbooks, RFC drafts, Confluence pages, design notes, or any structured technical document. Trigger when the user says 'write docs', 'create an HLD/LLD/ADR', 'document this', or when plan-task produces a documentation-only plan."
 model: claude-haiku-4-5-20251001
 tools: Read, Edit, Write, Bash, Grep, Glob
-maxTurns: 25
 color: green
 skills: hydra-claude:read-jira, hydra-claude:read-confluence, hydra-claude:write-confluence, hydra-claude:explore-codebase
 ---

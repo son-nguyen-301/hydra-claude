@@ -3,7 +3,6 @@ name: architect
 description: "Use when the plan complexity is expert: cross-cutting refactors, architectural decisions, unknown-root-cause debugging, security reviews, migration planning, tasks requiring analysis of multiple subsystems. Architect documents alternatives, risks, and blast radius. Trigger when plan-task suggests architect or when the task demands deep system understanding."
 model: claude-opus-4-6
 tools: Read, Edit, Write, Bash, Grep, Glob, NotebookEdit
-maxTurns: 60
 color: purple
 skills: hydra-claude:read-plan, hydra-claude:tdd, hydra-claude:explore-codebase
 effort: xhigh

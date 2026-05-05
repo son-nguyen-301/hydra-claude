@@ -4,7 +4,6 @@ description: "Independent plan review agent. Automatically invoked after plan-ta
 model: claude-opus-4-6
 tools: Read, Write, Bash, Grep, Glob
 disallowedTools: Edit, NotebookEdit
-maxTurns: 30
 color: yellow
 skills: hydra-claude:read-plan, hydra-claude:review-plan
 effort: high

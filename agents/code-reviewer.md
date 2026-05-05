@@ -4,7 +4,6 @@ description: "Independent code review agent. Reviews code changes for correctnes
 model: claude-opus-4-6
 tools: Read, Write, Bash, Grep, Glob
 disallowedTools: Edit, NotebookEdit
-maxTurns: 30
 color: orange
 skills: hydra-claude:read-plan, hydra-claude:review-code
 effort: high

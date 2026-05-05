@@ -3,7 +3,6 @@ name: sprinter
 description: "Use when the plan complexity is trivial or low: single-file changes, config tweaks, renames, doc lookups, fetch-and-write tasks. Sprinter executes fast with minimal overhead. Trigger when plan-task suggests sprinter or when the task is clearly a one-shot edit."
 model: claude-haiku-4-5-20251001
 tools: Read, Edit, Write, Bash, Grep, Glob
-maxTurns: 15
 color: cyan
 skills: hydra-claude:read-plan, hydra-claude:tdd
 ---
