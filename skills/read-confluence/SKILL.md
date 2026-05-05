@@ -25,6 +25,8 @@ Call `getConfluencePage` with the resolved numeric page ID.
 If the page is a parent/index page or the user needs the full section, call `getConfluencePageDescendants` to retrieve child pages. Note child page titles and IDs so the user can request specific children.
 
 **Step 3 — Output content**
-Provide the full page content (title, body, labels, version). If the page has inline or footer comments relevant to the task, include those as well using `getConfluencePageInlineComments` or `getConfluencePageFooterComments`.
+If this skill is the top-level user request, provide the full page content (title, body, labels, version) to the user. If the page has inline or footer comments relevant to the task, include those as well using `getConfluencePageInlineComments` or `getConfluencePageFooterComments`.
+
+If invoked as a sub-step, hold the content in context and proceed immediately to the caller's next step — do NOT stop or treat this as a terminal action.
 
 If MCP tools are unavailable, report a clear failure message.

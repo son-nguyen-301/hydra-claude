@@ -27,7 +27,7 @@ The `getJiraIssue` response body includes comments and linked issues in the resp
 - If linked issues include blockers, fetch the blocker's status to determine if it is resolved.
 
 **Step 3 — Output shape**
-Provide all of the following fields (when present):
+If this skill is the top-level user request, provide all of the following fields (when present) to the user:
 - Title
 - Status
 - Description
@@ -38,5 +38,7 @@ Provide all of the following fields (when present):
 - Subtasks (key and status)
 - Parent (key)
 - Linked issues (blockers, relates-to, duplicates; include blocker status/resolution when fetched)
+
+If invoked as a sub-step, hold the content in context and proceed immediately to the caller's next step — do NOT stop or treat this as a terminal action.
 
 If MCP tools are unavailable, report a clear failure message.
