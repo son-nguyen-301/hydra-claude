@@ -38,9 +38,17 @@ All IDs are three-digit zero-padded sequential numbers, computed per kind per pr
 
 ---
 
-## Precondition — codebase-knowledge.md
+## Precondition — project memory
 
-Before making any code changes, read `~/.claude/projects/<slug>/memory/codebase-knowledge.md` if it exists. If it does not exist, note this in your output and suggest running the `explore-codebase` skill first. Skip this step only when the task explicitly does not involve code changes (e.g., pure documentation from provided content).
+Before making any code changes, load project context from these sources (read each if it exists, note absence and continue — never abort):
+
+1. `~/.claude/projects/<slug>/memory/MEMORY.md` — Claude's native auto-memory index. Scan the one-line descriptions and read any topic files relevant to the current task.
+2. `~/.claude/projects/<slug>/memory/plugin/MEMORY.md` — Plugin-managed memory index. Scan the one-line descriptions and read any topic files relevant to the current task.
+3. `~/.claude/projects/<slug>/memory/codebase-knowledge.md` — Static codebase reference produced by `explore-codebase`.
+
+If none of these files exist, note this in your output and suggest running the `explore-codebase` skill. Skip this step only when the task explicitly does not involve code changes (e.g., pure documentation from provided content).
+
+Follow all rules and conventions found in these memory sources throughout your work.
 
 ---
 

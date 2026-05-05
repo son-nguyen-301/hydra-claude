@@ -11,6 +11,9 @@ This file contains all output and document templates used by skills and agents. 
 ```markdown
 # Plan {id}: {title}
 
+## Summary
+{1-2 sentence summary of what this plan does and why}
+
 ## Context / Requirements
 
 ## Complexity: {trivial|low|medium|high|expert}
@@ -29,6 +32,9 @@ This file contains all output and document templates used by skills and agents. 
 
 ```markdown
 # Sub-plan {parent-id}-{letter}: {title}
+
+## Summary
+{1-2 sentence summary of what this subtask does}
 
 ## Parent plan
 plan-{parent-id}.md
@@ -65,6 +71,8 @@ plan-{parent-id}.md
 ```markdown
 # Task {plan-id}
 ## Status: Done | Failed
+## Summary
+{1-2 sentence summary of the outcome}
 ## What changed
 ## Files touched (paths only)
 ## Verification run

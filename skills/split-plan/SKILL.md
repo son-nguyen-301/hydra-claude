@@ -9,6 +9,8 @@ description: "Decompose a parent plan into parallel-executable subtasks and orch
 
 Invoke the `read-plan` skill with the provided plan path or plan ID to retrieve the full plan content.
 
+After the plan content is loaded, proceed immediately to Step 2. Do NOT stop here or output the plan content to chat.
+
 Compute `<slug>` from CWD (every `/` replaced by `-`).
 
 ## Step 2 — Analyze and decompose
@@ -51,6 +53,8 @@ Write each subtask to:
 ```
 
 Use the `sub-plan-{parent-id}-{letter}.md` template from `workspace-templates.md`.
+
+When presenting the dependency table to the user, show the absolute expanded paths (with `~` resolved to the actual home directory), not the slug template.
 
 Present a dependency summary table to the user:
 
@@ -97,8 +101,8 @@ Completed-at: {ISO8601 timestamp}
 Agent: split-plan
 ```
 
-3. Report the overall status to the user (all done, partial failure with details, or aborted).
+3. Report the overall status to the user (all done, partial failure with details, or aborted). Always show absolute paths for the parent plan, task summaries, and any review files so the user can easily open them.
 
 ## Step 6 — Code review
 
-Spawn the `code-reviewer` agent with the parent plan path for a unified review of all changes made across all subtasks.
+Spawn the `code-reviewer` agent with the parent plan path for a unified review of all changes made across all subtasks. After the code reviewer returns, show the user the review verdict, finding counts, and the review file's absolute path.

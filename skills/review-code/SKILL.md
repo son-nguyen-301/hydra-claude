@@ -7,11 +7,11 @@ description: "Used internally by the code-reviewer agent. Review methodology too
 
 ## Step 0 — Precondition
 
-Compute `<slug>` from CWD (every `/` replaced by `-`). Attempt to read `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. If it exists, use it throughout the review to check convention alignment. If it does not exist, note this in the review summary and suggest `explore-codebase`, but continue — the review proceeds without it.
+Compute `<slug>` from CWD (every `/` replaced by `-`). Attempt to read `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. If it exists, use it throughout the review to check convention alignment. If it does not exist, note this in the review summary and suggest `explore-codebase`, but continue — the review proceeds without it. Also read `~/.claude/projects/<slug>/memory/MEMORY.md` and `memory/plugin/MEMORY.md` if they exist. Use entries relevant to the review to check convention alignment.
 
 ## Step 1 — Load context
 
-Accept a plan path or plan ID. Use the `read-plan` skill to load the plan. Also read the task summary at `~/.claude/projects/<slug>/tasks/task-{plan-id}.md`. Note any file that is absent and continue — do not abort.
+Accept a plan path or plan ID. Use the `read-plan` skill to load the plan. Also read the task summary at `~/.claude/projects/<slug>/tasks/task-{plan-id}.md`. Note any file that is absent and continue — do not abort. After loading the plan and task summary, proceed immediately to Step 2. Do NOT stop here or output the plan content to chat.
 
 ## Step 2 — Identify changed files
 
@@ -84,9 +84,9 @@ Write to `~/.claude/projects/<slug>/code-reviews/review-{plan-id}.md`. Create th
 
 ## Step 8 — Return findings
 
-Return to the caller:
+Provide the caller with:
 - Verdict (one word)
-- Review file path
+- Review file absolute path (with `~` expanded to the actual home directory)
 - Finding counts: `Blockers: N | Majors: N | Minors: N | Nits: N`
 
 Do NOT print the full review file content to chat.

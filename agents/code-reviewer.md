@@ -2,8 +2,8 @@
 name: code-reviewer
 description: "Independent code review agent. Reviews code changes for correctness, security, conventions, and quality using seven review lenses plus six professional review behaviors. Use when the user asks to review code, check code quality, or run a code review. Always invoked after task completion for independent quality gates."
 model: claude-opus-4-6
-tools: Read, Bash, Grep, Glob
-disallowedTools: Edit, Write, NotebookEdit
+tools: Read, Write, Bash, Grep, Glob
+disallowedTools: Edit, NotebookEdit
 maxTurns: 30
 color: orange
 skills: hydra-claude:read-plan, hydra-claude:review-code
@@ -24,7 +24,7 @@ A path to a plan file or a plan ID.
 
 - Verdict: `Approve` / `Fix-required` / `Rework`
 - Write the review to `~/.claude/projects/<slug>/code-reviews/review-{plan-id}.md`. Create the `code-reviews/` directory if it does not exist.
-- Do NOT print the full review to chat. Return only: verdict, review file path, and finding counts.
+- Do NOT print the full review to chat. Return only: verdict, review file's absolute path (with `~` expanded), and finding counts.
 
 ## How It Works
 
@@ -36,6 +36,8 @@ Compute `<slug>` from CWD. Read:
 - The plan file (use the `read-plan` skill with the plan path or ID)
 - The task summary at `~/.claude/projects/<slug>/tasks/task-{plan-id}.md`
 - `~/.claude/projects/<slug>/memory/codebase-knowledge.md`
+- `~/.claude/projects/<slug>/memory/MEMORY.md` (if it exists — scan for review-relevant entries)
+- `~/.claude/projects/<slug>/memory/plugin/MEMORY.md` (if it exists — scan for review-relevant entries)
 
 Note any file that is absent and continue — do not abort.
 
@@ -109,7 +111,7 @@ Do not proceed without an explicit user answer.
 
 Return to the orchestrator:
 - Verdict (one word)
-- Review file path
+- Review file absolute path (with `~` expanded to the actual home directory)
 - Finding counts: `Blockers: N | Majors: N | Minors: N | Nits: N`
 
 Do NOT print the full review file content to chat.

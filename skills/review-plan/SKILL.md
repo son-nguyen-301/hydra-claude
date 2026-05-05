@@ -7,11 +7,11 @@ description: "Mandatory step in the standard workflow. Invoked by the plan-revie
 
 ## Step 0 — Precondition
 
-Compute `<slug>` from CWD (every `/` replaced by `-`). Attempt to read `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. If it exists, use it throughout the review to check convention alignment. If it does not exist, note this in the review summary and suggest `explore-codebase`, but continue — the review proceeds without it.
+Compute `<slug>` from CWD (every `/` replaced by `-`). If `workspace-core.md` has already been read in this conversation, skip re-reading it. Attempt to read `~/.claude/projects/<slug>/memory/codebase-knowledge.md`. If it exists, use it throughout the review to check convention alignment. If it does not exist, note this in the review summary and suggest `explore-codebase`, but continue — the review proceeds without it. Also read `~/.claude/projects/<slug>/memory/MEMORY.md` and `memory/plugin/MEMORY.md` if they exist. Use entries relevant to the review to check convention alignment.
 
 ## Step 1 — Load the plan
 
-Invoke the `read-plan` skill with the plan ID or path provided by the user. Use the returned content verbatim. Do not guess paths or reconstruct the plan from memory.
+If the plan has already been read in this conversation (e.g., by the calling agent), skip re-reading and use the content already in context. Otherwise, invoke the `read-plan` skill with the plan ID or path provided by the user. Use the returned content verbatim. Do not guess paths or reconstruct the plan from memory. After loading the plan, proceed immediately to Step 2. Do NOT stop here or output the plan content.
 
 ## Step 2 — Apply the five review lenses
 
@@ -100,9 +100,9 @@ Either: "Apply the rewrites above to plan-{plan-id}.md, then re-invoke review-pl
 
 ## Step 5 — Return findings
 
-Return to the caller:
+Provide the caller with:
 - Verdict (one word)
-- Review file path
+- Review file absolute path (with `~` expanded to the actual home directory)
 - Finding counts: `Blockers: N | Majors: N | Minors: N | Nits: N`
 
 Do NOT print the full review file content to chat.

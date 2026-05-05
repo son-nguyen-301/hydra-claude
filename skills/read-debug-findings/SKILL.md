@@ -7,9 +7,11 @@ description: "Read a debug findings report by ID or path. Invoked by plan-task a
 
 ## Return contract
 
-Return the full debug report content verbatim. Do not summarize. The intended consumer is the `plan-task` skill (Bug-fixing branch), which reads these findings before writing a bug-fix plan — the return shape must be self-contained.
+Read the debug report and hold its content in context for subsequent processing. The content is self-contained — do NOT re-fetch or supplement it. Do NOT output the report content to chat unless this skill is the top-level user request (e.g., user said "show me the debug report").
 
-If the report content exceeds 400 lines, return it in full and flag it as unusually large so the caller can decide whether to summarize. Never truncate.
+When invoked as a sub-step of another skill (e.g., plan-task bug-fixing branch), proceed immediately to the caller's next step after reading — do NOT stop or treat this as a terminal action.
+
+If the report content exceeds 400 lines, flag it as unusually large so the caller can decide whether to summarize. Never truncate.
 
 ## Procedure
 

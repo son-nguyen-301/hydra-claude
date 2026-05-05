@@ -5,8 +5,16 @@ description: "Investigate bugs and trace root causes. Invoke when the user repor
 
 > Workspace path, slug computation, and ID scheme are defined in `skills/_shared/workspace-core.md`. Read that file first.
 
+## Return contract
+
+After writing findings, hold the file path in context for the caller. Do NOT output the full report content to chat.
+
+When invoked as a sub-step of another skill (e.g., plan-task bug-fixing branch), proceed immediately to the caller's next step after writing findings — do NOT stop or treat this as a terminal action.
+
+---
+
 **Step 0 — Precondition**
-Compute `<slug>` from the CWD (replace every `/` with `-`). Read `~/.claude/projects/<slug>/memory/codebase-knowledge.md` if it exists. If it does not exist, note this in your output and suggest running the `explore-codebase` skill first. Continue regardless.
+Load project memory per the shared precondition in `workspace-core.md`: read the native auto-memory index (`memory/MEMORY.md`), plugin memory index (`memory/plugin/MEMORY.md`), and `codebase-knowledge.md`. For each, read if it exists, note absence and continue.
 
 ---
 
@@ -60,7 +68,7 @@ Confirm the hypothesis before writing findings:
 - Note whether the fix is a one-line change or requires structural work (this affects plan complexity).
 
 **Step 5 — Write findings**
-Write findings to `~/.claude/projects/<slug>/debug-findings/debug-report-{bug-id}.md` using the `debug-report-{id}.md` template from the shared reference. Create the directory if needed. Return the file path.
+Write findings to `~/.claude/projects/<slug>/debug-findings/debug-report-{bug-id}.md` using the `debug-report-{id}.md` template from the shared reference. Create the directory if needed. Note the file path for the caller.
 
 Populate all template fields:
 - **Summary**: one paragraph, what the bug is and where it lives

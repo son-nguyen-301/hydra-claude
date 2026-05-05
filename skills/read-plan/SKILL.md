@@ -7,11 +7,13 @@ description: "Read a plan file by ID or path. MUST be invoked before delegating 
 
 ## Return contract
 
-Return the full plan content verbatim. Do not summarize.
+Read the plan file and hold its content in context for subsequent processing. Do NOT output the plan content to chat unless this skill is the top-level user request (e.g., user said "show me the plan").
 
-If the plan content exceeds 400 lines, return it in full and flag it as unusually large so the caller can decide whether to summarize before forwarding to a subagent. Never truncate.
+When invoked as a sub-step of another skill or agent workflow, proceed immediately to the caller's next step after reading — do NOT stop or treat this as a terminal action.
 
-If an Execution record section is present at the bottom of the plan, include it in the returned content so the caller can see the plan's completion status at a glance.
+If the plan content exceeds 400 lines, flag it as unusually large so the caller can decide whether to summarize before forwarding to a subagent. Never truncate.
+
+If an Execution record section is present at the bottom of the plan, include it so the caller can see the plan's completion status at a glance.
 
 ## Procedure
 

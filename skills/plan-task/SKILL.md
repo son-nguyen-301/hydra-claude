@@ -55,10 +55,10 @@ Follow the [Shared: Writing the plan](#shared-writing-the-plan) section below.
 
 > Workspace path, slug computation, and ID scheme are in `skills/_shared/workspace-core.md`. Output templates are in `skills/_shared/workspace-templates.md`. Read both files first.
 
-Read and follow the rules in `~/.claude/projects/<slug>/memory/codebase-knowledge.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Use the `plan-{id}.md` template from `workspace-templates.md`.
+Load project memory per the shared precondition in `workspace-core.md` before writing the plan. Write the plan to `~/.claude/projects/<slug>/plans/plan-{plan-id}.md` (create the plans/ directory if it does not exist). Use the `plan-{id}.md` template from `workspace-templates.md`.
 
 **Step 1 — Write the plan**
-Inform the user of the plan filename and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
+Inform the user of the plan's absolute file path and the suggested subagent. Update the plan if the user provides additional input. Do NOT print the plan content to the user.
 
 **Step 2 — Spawn the plan-reviewer agent (MANDATORY)**
 Spawn the `plan-reviewer` agent with the plan path. The plan-reviewer agent will invoke the review-plan skill internally, apply its six professional review behaviors, and return a verdict: `Approve`, `Approve-with-changes`, or `Revise`.
@@ -72,6 +72,8 @@ Spawn the `plan-reviewer` agent with the plan path. The plan-reviewer agent will
 - **Revise**: The plan has blocking issues that must be resolved. Present the blockers to the user and offer: "I found issues that should be fixed before proceeding. Would you like me to re-plan with these findings as context?"
   - If yes: incorporate the findings and return to Step 1.
   - If no: proceed with the current plan at the user's risk.
+
+Always include the review file's absolute path when presenting the verdict to the user.
 
 **Step 4 — User approval and execution**
 Ask the user for final approval to proceed with the plan. Once approved, invoke the `split-plan` skill with the plan path. The `split-plan` skill handles decomposition into sub-plans, the sub-plan approval loop, parallel execution in waves, and the final code review. Do NOT directly invoke a subagent — that is now the responsibility of `split-plan`.
