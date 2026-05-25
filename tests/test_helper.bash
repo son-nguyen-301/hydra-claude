@@ -14,3 +14,12 @@ setup_isolated_home() {
   export HYDRA_FAKE_HOME="$BATS_TEST_TMPDIR/home"
   mkdir -p "$HYDRA_FAKE_HOME"
 }
+
+# Create an isolated project directory under BATS_TEST_TMPDIR with a .git marker
+# so resolve_project_root identifies it as the project root. Exports
+# HYDRA_FAKE_PROJECT pointing at the directory.
+# BATS_TEST_TMPDIR is automatically cleaned up by bats — no manual rm needed.
+setup_isolated_project() {
+  export HYDRA_FAKE_PROJECT="$BATS_TEST_TMPDIR/project"
+  mkdir -p "$HYDRA_FAKE_PROJECT/.git"
+}
