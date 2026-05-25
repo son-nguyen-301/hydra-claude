@@ -7,6 +7,10 @@ description: "Capture repo-specific patterns, corrections, and conventions from 
 
 **Project root resolution.** All memory paths in this skill are relative to the project root. The project root is the nearest ancestor of the current working directory that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback). Use `pwd` and walk up until you find one. If you reach `/` without finding either marker, use `pwd` as the project root. All memory lives at `<project-root>/.claude/memory/plugin/`.
 
+**Focused mode (mid-session capture).** If the user prompt invoking this skill contains a `PATTERN:` line and a `WHY:` line, you were invoked in focused mode. Skip Steps 1-2 entirely — do not scan the conversation. Treat the provided PATTERN as the single pattern title to save, and WHY as its rationale. Jump directly to Step 3 (Read memory index) and follow Steps 3-9 normally for that one pattern.
+
+If no `PATTERN:` / `WHY:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
+
 **Step 1 — Read the conversation**
 Review the current conversation for repo-specific patterns, decisions, corrections, and validated workflows.
 
