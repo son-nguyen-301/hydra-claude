@@ -1,70 +1,28 @@
-# Shared Reference — Workspace paths, IDs, and Preconditions
+# Shared Reference — Project-local memory paths
 
-This file is the single source of truth for workspace path, slug computation, ID scheme, preconditions, and execution records. All skills and agents reference this file. Do NOT duplicate these rules.
-
----
-
-## Workspace path
-
-The workspace base is `~/.claude/projects/<slug>/`.
-
-`<slug>` = the project's absolute CWD path with every `/` replaced by `-`
-(e.g., `/Users/foo/bar` becomes `-Users-foo-bar`).
-
-Directory layout:
-
-| Directory          | Purpose                                  |
-|--------------------|------------------------------------------|
-| `plans/`           | Task plans created by `plan-task`        |
-| `tasks/`           | Task summaries written by executor agents|
-| `debug-findings/`  | Debug reports written by the `debug` skill|
-| `memory/`          | Claude's native auto-memory (MEMORY.md, topic files) + `codebase-knowledge.md` |
-| `memory/plugin/`   | Plugin-managed memory: `MEMORY.md` (index), topic files with YAML frontmatter  |
-| `docs/`            | Documents produced by `doc-writer`       |
-| `plan-reviews/`    | Plan reviews written by `review-plan` skill   |
-| `code-reviews/`    | Code reviews written by `code-reviewer` agent |
+This file is the single source of truth for where plugin memory lives. The `learn` skill references this file. Do NOT duplicate these rules elsewhere.
 
 ---
 
-## ID computation
+## Memory path
 
-All IDs are three-digit zero-padded sequential numbers, computed per kind per project.
+All plugin memory for a project lives at `<project-root>/.claude/memory/plugin/`.
 
-**Plan ID:** scan `~/.claude/projects/<slug>/plans/` for existing `plan-NNN.md` files. The next ID is `max(NNN) + 1`, zero-padded to three digits. If the `plans/` directory does not exist or is empty, the first ID is `001`.
+`<project-root>` is the nearest ancestor of the current working directory that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback). If neither marker is found before reaching `/`, the project root is the current working directory itself.
 
-**Debug ID:** same scheme, scanning `~/.claude/projects/<slug>/debug-findings/` for `debug-report-NNN.md`. First ID is `001`.
+Layout inside `plugin/`:
 
-**Task ID:** matches the plan ID that produced it. File naming: `task-{plan-id}.md`. If the agent receives a free-text task description (no plan ID), compute the next available `task-NNN.md` by scanning the `tasks/` directory using the same scheme.
+| File             | Purpose                                                          |
+|------------------|------------------------------------------------------------------|
+| `MEMORY.md`      | One-line index of all categories with their scope summaries.     |
+| `*.md`           | Topic files: one category per file, each with YAML frontmatter.  |
 
----
-
-## Precondition — project memory
-
-Before making any code changes, load project context from these sources (read each if it exists, note absence and continue — never abort):
-
-1. `~/.claude/projects/<slug>/memory/MEMORY.md` — Claude's native auto-memory index. Scan the one-line descriptions and read any topic files relevant to the current task.
-2. `~/.claude/projects/<slug>/memory/plugin/MEMORY.md` — Plugin-managed memory index. Scan the one-line descriptions and read any topic files relevant to the current task.
-3. `~/.claude/projects/<slug>/memory/codebase-knowledge.md` — Static codebase reference produced by `explore-codebase`.
-
-If none of these files exist, note this in your output and suggest running the `explore-codebase` skill. Skip this step only when the task explicitly does not involve code changes (e.g., pure documentation from provided content).
-
-Follow all rules and conventions found in these memory sources throughout your work.
+The category filenames are not predefined; they emerge as the learn skill encounters new patterns. See `workspace-templates.md` for the topic-file template.
 
 ---
 
-## Plan cross-reference (executor agents)
+## Legacy home-directory path (pre-3.1.0)
 
-After writing the task summary, append an execution record to the bottom of the originating plan file (if it exists):
+Versions before 3.1.0 stored memory at `~/.claude/projects/<slug>/memory/plugin/`, where `<slug>` was the project's absolute path with `/` replaced by `-`.
 
-```markdown
----
-## Execution record
-Status: Done | Failed | Partial
-Task summary: ~/.claude/projects/<slug>/tasks/task-{plan-id}.md
-Completed-at: {ISO8601 timestamp}
-Agent: {sprinter|builder|architect}
-```
-
-`Partial` is used by `split-plan` when some subtasks succeed and others fail.
-
-If the plan file is not found (free-text task), skip this step. If the section already exists (retry / re-run), replace it rather than duplicating.
+On first `SessionStart` after upgrading to 3.1.0+, hydra-claude's `inject-learned.sh` hook auto-copies any existing legacy memory into the new project-local location. The migration is idempotent (won't re-run once the project-local directory exists) and non-destructive (the legacy location is left in place as a backup). Users can manually remove the legacy directory once they've verified the migration.
