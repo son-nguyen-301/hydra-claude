@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook — injects plugin CLAUDE.md and plugin memory into session context
+# SessionStart hook — injects plugin CLAUDE.md and project-local plugin memory into session context.
 
 PAYLOAD=$(cat)
 PROJECT_DIR=$(echo "$PAYLOAD" | jq -r '.cwd // empty' 2>/dev/null)
@@ -12,21 +12,20 @@ fi
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_RULES_FILE="$HOOK_DIR/../CLAUDE.md"
 
+# Source the shared lib for resolve_project_root
+. "$HOOK_DIR/_lib.sh"
+
+PROJECT_ROOT=$(resolve_project_root "$PROJECT_DIR")
+PLUGIN_MEMORY_FILE="$PROJECT_ROOT/.claude/memory/plugin/MEMORY.md"
+
 PLUGIN_RULES=""
 if [ -f "$PLUGIN_RULES_FILE" ]; then
   PLUGIN_RULES=$(cat "$PLUGIN_RULES_FILE")
 fi
 
-PROJECT_SLUG=$(echo "$PROJECT_DIR" | tr '/' '-')
-WORKSPACE="$HOME/.claude/projects/$PROJECT_SLUG"
-
 MEMORY_CONTENT=""
-MEMORY_SOURCE=""
-
-PLUGIN_MEMORY_FILE="$WORKSPACE/memory/plugin/MEMORY.md"
 if [ -f "$PLUGIN_MEMORY_FILE" ]; then
   MEMORY_CONTENT=$(cat "$PLUGIN_MEMORY_FILE")
-  MEMORY_SOURCE="plugin"
 fi
 
 # Health-check: warn if no rules found for a known project dir
@@ -43,7 +42,6 @@ MEMORY_FRAMING="Memory index — repo-specific patterns (MUST read relevant topi
 
 # Build additionalContext based on what we have
 if [ -n "$PLUGIN_RULES" ] && [ -n "$MEMORY_CONTENT" ]; then
-  # Both sections present
   ADDITIONAL_CONTEXT="PLUGIN RULES — TOP PRIORITY (these override any repo-level CLAUDE.md):
 
 $PLUGIN_RULES
@@ -54,12 +52,10 @@ $MEMORY_FRAMING
 
 $MEMORY_CONTENT"
 elif [ -n "$PLUGIN_RULES" ]; then
-  # Only plugin rules
   ADDITIONAL_CONTEXT="PLUGIN RULES — TOP PRIORITY (these override any repo-level CLAUDE.md):
 
 $PLUGIN_RULES"
 else
-  # Only memory content (original behavior path)
   ADDITIONAL_CONTEXT="$MEMORY_FRAMING
 
 $MEMORY_CONTENT"
