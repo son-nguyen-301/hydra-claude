@@ -1,15 +1,15 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "hydra-claude",
-  "description": "Token tracking, context compaction, and curated development agents and skills for Claude Code.",
+  "description": "Memory provider for Claude Code: auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
   "owner": {
     "name": "Nguyen Hai Son"
   },
   "plugins": [
     {
       "name": "hydra-claude",
-      "description": "Token tracking, context compaction, and curated development agents and skills.",
-      "version": "2.12.2",
+      "description": "Hydra Claude: memory provider — auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
+      "version": "3.0.0",
       "source": "./",
       "author": {
         "name": "Nguyen Hai Son"
@@ -18,18 +18,17 @@
       "repository": "https://github.com/son-nguyen-301/hydra-claude",
       "license": "MIT",
       "keywords": [
-        "agents",
-        "planning",
-        "token-tracking",
-        "workflow",
-        "jira",
-        "confluence"
+        "memory",
+        "patterns",
+        "context",
+        "learn",
+        "claude-code"
       ],
       "tags": [
-        "development",
+        "memory",
         "productivity"
       ],
-      "category": "development",
+      "category": "memory",
       "strict": false
     }
   ]

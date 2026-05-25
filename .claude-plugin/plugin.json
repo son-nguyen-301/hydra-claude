@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "hydra-claude",
-  "version": "2.12.2",
-  "description": "Hydra Claude: token tracking, context compaction, and curated development agents and skills.",
+  "version": "3.0.0",
+  "description": "Hydra Claude: memory provider — auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
   "author": {
     "name": "Nguyen Hai Son"
   },
@@ -10,26 +10,13 @@
   "homepage": "https://github.com/son-nguyen-301/hydra-claude",
   "repository": "https://github.com/son-nguyen-301/hydra-claude",
   "keywords": [
-    "agents",
-    "planning",
-    "token-tracking",
-    "workflow",
-    "jira",
-    "confluence"
-  ],
-  "agents": [
-    "./agents/architect.md",
-    "./agents/sprinter.md",
-    "./agents/builder.md",
-    "./agents/doc-writer.md",
-    "./agents/code-reviewer.md",
-    "./agents/plan-reviewer.md"
+    "memory",
+    "patterns",
+    "context",
+    "learn",
+    "claude-code"
   ],
   "skills": "./skills/",
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh\""
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -38,17 +25,6 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-learned.sh\""
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh\""
           }
         ]
       }
