@@ -18,6 +18,18 @@ PLUGIN_RULES_FILE="$HOOK_DIR/../CLAUDE.md"
 PROJECT_ROOT=$(resolve_project_root "$PROJECT_DIR")
 PLUGIN_MEMORY_FILE="$PROJECT_ROOT/.claude/memory/plugin/MEMORY.md"
 
+# One-shot, idempotent, non-destructive migration of legacy home-directory memory.
+# Activates only if the new project-local memory dir does not exist AND the legacy
+# slug-based dir does. Leaves the legacy location in place as a backup.
+NEW_PLUGIN_DIR="$PROJECT_ROOT/.claude/memory/plugin"
+LEGACY_SLUG=$(echo "$PROJECT_ROOT" | tr '/' '-')
+LEGACY_PLUGIN_DIR="$HOME/.claude/projects/$LEGACY_SLUG/memory/plugin"
+if [ ! -d "$NEW_PLUGIN_DIR" ] && [ -d "$LEGACY_PLUGIN_DIR" ]; then
+  mkdir -p "$NEW_PLUGIN_DIR"
+  cp -R "$LEGACY_PLUGIN_DIR/." "$NEW_PLUGIN_DIR/"
+  echo "[hydra-claude] migrated memory from $LEGACY_PLUGIN_DIR to $NEW_PLUGIN_DIR" >&2
+fi
+
 PLUGIN_RULES=""
 if [ -f "$PLUGIN_RULES_FILE" ]; then
   PLUGIN_RULES=$(cat "$PLUGIN_RULES_FILE")

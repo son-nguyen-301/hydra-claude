@@ -347,3 +347,83 @@ _memory_file_for() {
   assert_output --partial "PLUGIN RULES"
   assert_output --partial "Plugin memory always injected."
 }
+
+# ── migration from legacy home-directory memory ───────────────────────────────
+
+# Helper: return the legacy slug-based MEMORY.md path under HYDRA_FAKE_HOME
+_legacy_memory_file_for() {
+  local project_dir="$1"
+  local home_dir="$2"
+  local slug
+  slug=$(echo "$project_dir" | tr '/' '-')
+  echo "$home_dir/.claude/projects/$slug/memory/plugin/MEMORY.md"
+}
+
+@test "inject-learned: migrates legacy memory when only old location exists" {
+  setup_isolated_home
+  setup_isolated_project
+
+  # Seed only the legacy location.
+  local LEGACY_FILE
+  LEGACY_FILE=$(_legacy_memory_file_for "$HYDRA_FAKE_PROJECT" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$LEGACY_FILE")"
+  printf 'Legacy content X.\n' > "$LEGACY_FILE"
+
+  local NEW_FILE
+  NEW_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  [ ! -f "$NEW_FILE" ] || fail "precondition: new file must not exist"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+
+  # After the hook runs, the new location must exist and match the legacy content.
+  [ -f "$NEW_FILE" ] || fail "new memory file was not created"
+  run cat "$NEW_FILE"
+  assert_output "Legacy content X."
+
+  # Legacy location must still exist (non-destructive).
+  [ -f "$LEGACY_FILE" ] || fail "legacy file should remain in place"
+}
+
+@test "inject-learned: migration is idempotent when new location already exists" {
+  setup_isolated_home
+  setup_isolated_project
+
+  local LEGACY_FILE
+  LEGACY_FILE=$(_legacy_memory_file_for "$HYDRA_FAKE_PROJECT" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$LEGACY_FILE")"
+  printf 'Legacy content (should NOT overwrite new).\n' > "$LEGACY_FILE"
+
+  local NEW_FILE
+  NEW_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  mkdir -p "$(dirname "$NEW_FILE")"
+  printf 'New content preserved.\n' > "$NEW_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+
+  # New file content must be unchanged.
+  run cat "$NEW_FILE"
+  assert_output "New content preserved."
+}
+
+@test "inject-learned: migration is a no-op when neither location exists" {
+  setup_isolated_home
+  setup_isolated_project
+
+  local NEW_FILE
+  NEW_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+
+  # No migration should have occurred — new dir/file must not exist.
+  [ ! -f "$NEW_FILE" ] || fail "new memory file should not exist"
+  [ ! -d "$(dirname "$NEW_FILE")" ] || fail "new memory dir should not exist"
+}
