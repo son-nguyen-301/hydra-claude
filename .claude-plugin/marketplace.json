@@ -9,7 +9,7 @@
     {
       "name": "hydra-claude",
       "description": "Hydra Claude: memory provider — auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "source": "./",
       "author": {
         "name": "Nguyen Hai Son"
