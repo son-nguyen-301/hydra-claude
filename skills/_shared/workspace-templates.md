@@ -1,104 +1,10 @@
-# Shared Reference — Output Templates
+# Shared Reference — Memory output templates
 
-This file contains all output and document templates used by skills and agents. Do NOT duplicate these templates — reference this file instead.
+This file contains the output templates the `learn` skill uses when writing project-local memory. Memory lives at `<project-root>/.claude/memory/plugin/` (see `workspace-core.md`).
 
 ---
 
-## Output templates
-
-### plan-{id}.md
-
-```markdown
-# Plan {id}: {title}
-
-## Summary
-{1-2 sentence summary of what this plan does and why}
-
-## Context / Requirements
-
-## Complexity: {trivial|low|medium|high|expert}
-## Suggested agent: {sprinter|builder|architect}
-
-## Implementation steps
-
-## Files to create / edit
-
-## Verification
-
-## Risks / open questions
-```
-
-### sub-plan-{parent-id}-{letter}.md
-
-```markdown
-# Sub-plan {parent-id}-{letter}: {title}
-
-## Summary
-{1-2 sentence summary of what this subtask does}
-
-## Parent plan
-plan-{parent-id}.md
-
-## Dependencies
-{list of sub-plan letter IDs this depends on, or "None"}
-
-## Context / Requirements
-
-## Complexity: {trivial|low|medium|high|expert}
-## Suggested agent: {sprinter|builder|architect}
-
-## Implementation steps
-
-## Files to create / edit
-
-## Verification
-```
-
-### debug-report-{id}.md
-
-```markdown
-# Debug Report {id}
-## Summary
-## Reproduction
-## Suspected root cause
-## Affected code (paths:lines)
-## Fix hypothesis
-## Open questions
-```
-
-### task-{plan-id}.md
-
-```markdown
-# Task {plan-id}
-## Status: Done | Failed
-## Summary
-{1-2 sentence summary of the outcome}
-## What changed
-## Files touched (paths only)
-## Verification run
-## Follow-ups
-```
-
-### codebase-knowledge.md outline
-
-The `explore-codebase` skill produces a file following this outline:
-
-1. What this repo is
-2. Tech stack and tooling
-3. Top-level layout
-4. Architecture
-5. Orchestration model
-6. Workspace layout
-7. Hooks
-8. Skills
-9. Tests
-10. JSON manifests
-11. Coding conventions
-12. Existing rule files
-13. Gotchas / learned patterns
-14. Task completion checklist
-
-### MEMORY.md index template
+## MEMORY.md index template
 
 ```markdown
 # Memory Index
@@ -106,16 +12,16 @@ The `explore-codebase` skill produces a file following this outline:
 - [{Category name}]({filename}.md) — {scope summary from the file's scope field}
 ```
 
-Each line points to a topic file. The description after `—` is the scope summary used for routing decisions. Categories are not predefined — they emerge dynamically based on project content.
+Each line points to a topic file. The description after `—` is the scope summary used by the learn skill to route new patterns. Categories are not predefined — they emerge dynamically based on project content.
 
-Plugin memory files are stored in `memory/plugin/`. The MEMORY.md index and all topic files live in this subdirectory.
+---
 
-### Topic file template
+## Topic file template
 
 ```markdown
 ---
 scope: "{1-2 sentence description of what belongs in this file}"
-not: "{What does NOT belong — prevents category from becoming a dumping ground}"
+not: "{What does NOT belong — prevents the category from becoming a dumping ground}"
 anchors:
   - "{Example entry title 1 — representative of this category}"
   - "{Example entry title 2}"
@@ -131,110 +37,3 @@ anchors:
 ```
 
 Note on `---` delimiters: The YAML frontmatter is delimited by the first two `---` lines at the top of the file. The `---` lines between entries (separating `## heading` blocks) are entry separators and are distinguished by position — they appear between entries, not at the top of the file.
-
-### code-review-{plan-id}.md
-
-```markdown
-# Code Review {plan-id}
-
-## Metadata
-- Plan: ~/.claude/projects/<slug>/plans/plan-{plan-id}.md
-- Task: ~/.claude/projects/<slug>/tasks/task-{plan-id}.md
-- Reviewed-at: {ISO8601}
-- Files reviewed: {count}
-- Lenses applied: Plan Compliance, Correctness, Security, Conventions, Edge Cases, Test Quality, Code Quality
-
-## Verdict
-One of: **Approve | Fix-required | Rework**
-
-## Summary
-(2-5 sentences: overall quality, top risks, what stood out.)
-
-## Statistics
-- Total findings: {count}
-- Blockers: {count} | Majors: {count} | Minors: {count} | Nits: {count}
-
-## Findings
-
-### Blockers
-(Omit section if none. Each finding: Severity - Lens - File:lines - Observation - Suggested fix - Rationale - Effort.)
-
-### Major
-...
-
-### Minor
-...
-
-### Nit
-...
-
-## Plan compliance checklist
-(For each plan step: ✅ Done / ❌ Missing / ⚠️ Partial / ↔️ Deviated with brief note.)
-
-## Lens coverage
-Brief note per lens (even when no findings) so the orchestrator sees what was checked.
-
-## Recommended next step
-Either: "Spawn {original-agent} to apply fixes listed above." OR "Task is done — implementation passes all review lenses."
-```
-
----
-
-## Document type templates (doc-writer)
-
-### HLD (High-Level Design)
-
-```markdown
-# {title} — HLD
-## Problem statement
-## Goals and non-goals
-## Proposed architecture
-## Alternatives considered
-## Risks and mitigations
-## Rollout plan
-```
-
-### LLD (Low-Level Design)
-
-```markdown
-# {title} — LLD
-## Interfaces
-## Data shapes
-## Control flow
-## Error handling
-## Test plan
-```
-
-### ADR (Architecture Decision Record)
-
-```markdown
-# ADR-{NNN}: {title}
-## Status: Proposed | Accepted | Deprecated | Superseded
-## Context
-## Decision
-## Consequences
-```
-
-### Runbook
-
-```markdown
-# Runbook: {title}
-## Trigger / when to use
-## Preconditions
-## Steps
-## Verification
-## Rollback procedure
-## Oncall contact
-```
-
-### RFC (Request for Comments)
-
-```markdown
-# RFC: {title}
-## Author
-## Status: Draft | Under Review | Accepted | Rejected
-## Summary
-## Motivation
-## Detailed design
-## Open questions
-```
