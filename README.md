@@ -6,7 +6,7 @@ Memory provider for Claude Code. Captures repo-specific patterns at session end 
 
 ## What it does
 
-- **Auto-capture at session end.** When you stop a Claude Code session that had meaningful activity (≥5,000 input tokens), hydra-claude runs the `learn` skill, which scans the conversation for repo-specific patterns, corrections, and validated conventions, then routes each one to a categorized topic file under `~/.claude/projects/<slug>/memory/plugin/`.
+- **Auto-capture at session end.** When you stop a Claude Code session that had meaningful activity (≥5,000 input tokens), hydra-claude runs the `learn` skill, which scans the conversation for repo-specific patterns, corrections, and validated conventions, then routes each one to a categorized topic file under `<project-root>/.claude/memory/plugin/`.
 - **Inject memory at session start.** On `SessionStart`, hydra-claude injects the plugin's `CLAUDE.md` rules plus the project's `MEMORY.md` index into Claude's context so Claude knows which topic files exist before deciding what to read.
 - **Re-inject after compaction.** On `PostCompact`, the same content is re-injected so context-compacted sessions don't lose the memory map.
 
@@ -65,42 +65,52 @@ The `learn` skill (`skills/learn/SKILL.md`) is the capture procedure: filter the
 
 ## Workspace storage
 
-All memory lives under `~/.claude/projects/<slug>/` where `<slug>` is the project's absolute path with every `/` replaced by `-`.
-
-Example: `/Users/foo/bar` → `-Users-foo-bar` → `~/.claude/projects/-Users-foo-bar/`.
+All memory lives inside the project at `<project-root>/.claude/memory/plugin/`. The plugin resolves the project root by walking up from Claude Code's working directory to the nearest ancestor that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback). If neither marker is found, the current working directory is used.
 
 Layout:
 
 ```
-~/.claude/projects/<slug>/
-└── memory/
-    └── plugin/
-        ├── MEMORY.md              # one-line index of categories
-        ├── corrections.md          # example category
-        ├── patterns-testing.md     # example category
-        └── ...                     # more categories as they emerge
+<project-root>/.claude/memory/plugin/
+├── MEMORY.md              # one-line index of categories
+├── corrections.md          # example category
+├── patterns-testing.md     # example category
+└── ...                     # more categories as they emerge
 ```
 
-To auto-approve writes into this workspace from a specific project, add to that project's `.claude/settings.json`:
+**Memory is committed to git by default**, so team members share the project's learned conventions. If you'd prefer per-developer memory, add `.claude/memory/` (or `.claude/memory/plugin/`) to your `.gitignore`.
+
+To auto-approve writes from a strict-allowlist project, add to `.claude/settings.json`:
 
 ```json
 {
   "permissions": {
     "allow": [
-      "Write(~/.claude/projects/*)",
-      "Bash(mkdir -p ~/.claude/projects/*)"
+      "Write(.claude/memory/plugin/*)",
+      "Bash(mkdir -p .claude/memory/plugin/*)"
     ]
   }
 }
 ```
+
+Most users don't need this snippet — Claude Code allows writes inside the current project by default.
+
+### Migrating from pre-3.1.0
+
+Versions before 3.1.0 stored memory at `~/.claude/projects/<slug>/memory/plugin/`. On first SessionStart after upgrading, hydra-claude auto-copies any existing legacy memory into the new project-local location. The migration:
+
+- runs only when the new project-local directory does not yet exist,
+- is non-destructive — the legacy directory is left in place as a backup,
+- emits one stderr log line (`[hydra-claude] migrated memory from ... to ...`) when it activates.
+
+Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<slug>/` to reclaim the disk space.
 
 ---
 
 ## Manual usage
 
 - **Invoke learn explicitly:** `/hydra-claude:learn` at any point in a session to capture patterns mid-conversation.
-- **Write memory by hand:** Edit any topic file under `~/.claude/projects/<slug>/memory/plugin/` directly. Add an entry to `MEMORY.md` if you create a new category.
-- **Inspect memory:** `cat ~/.claude/projects/<slug>/memory/plugin/MEMORY.md` to see the routing index.
+- **Write memory by hand:** Edit any topic file under `<project-root>/.claude/memory/plugin/` directly. Add an entry to `MEMORY.md` if you create a new category.
+- **Inspect memory:** `cat <project-root>/.claude/memory/plugin/MEMORY.md` to see the routing index.
 
 ---
 
@@ -108,7 +118,7 @@ To auto-approve writes into this workspace from a specific project, add to that 
 
 v2.x bundled orchestration agents (sprinter/builder/architect/doc-writer/code-reviewer/plan-reviewer), planning skills (plan-task/split-plan/review-plan/review-code), and Jira/Confluence/debug helpers. **v3.0.0 removes all of those.** Hydra is now memory-only.
 
-Existing memory files under `~/.claude/projects/*/memory/plugin/` are unaffected by the upgrade — only the in-repo plugin code changes.
+Existing memory files are unaffected by the upgrade — only the in-repo plugin code changes.
 
 If you relied on the orchestration agents or planning skills, pin to the v2.12.2 tag or fork before upgrading.
 
