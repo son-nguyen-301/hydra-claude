@@ -114,6 +114,10 @@ Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<s
 - **Write memory by hand:** Edit any topic file under `<project-root>/.claude/memory/plugin/` directly. Add an entry to `MEMORY.md` if you create a new category.
 - **Inspect memory:** `cat <project-root>/.claude/memory/plugin/MEMORY.md` to see the routing index.
 
+### Initial setup
+
+For a fresh project with no memory yet, invoke `/hydra-claude:init` to scan the codebase and seed initial entries. The skill reads the project manifests, README, key config files, CI config, the main entry point, and one representative test file — then drafts candidate memory entries grouped by category and presents them for approval. Approved findings are written via the learn skill (so routing and dedup work the same way). Re-runs are safe: existing entries are detected and skipped.
+
 ---
 
 ## Migrating from v2.x
