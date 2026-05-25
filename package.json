@@ -1,7 +1,7 @@
 {
   "name": "hydra-claude",
-  "version": "2.12.2",
-  "description": "A structured planning plugin for Claude Code",
+  "version": "3.0.0",
+  "description": "Memory provider for Claude Code — auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
   "claude": {
     "type": "plugin"
   },
