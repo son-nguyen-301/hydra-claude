@@ -73,3 +73,29 @@ _check_skill_description_length() {
 @test "skills/learn: description >= 40 chars" {
   _check_skill_description_length learn
 }
+
+# ── init ───────────────────────────────────────────────────────────────────────
+
+@test "skills/init: SKILL.md exists" {
+  _check_skill_file_exists init
+}
+
+@test "skills/init: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start init
+}
+
+@test "skills/init: has name: field in frontmatter" {
+  _check_skill_has_name init
+}
+
+@test "skills/init: has description: field in frontmatter" {
+  _check_skill_has_description init
+}
+
+@test "skills/init: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty init
+}
+
+@test "skills/init: description >= 40 chars" {
+  _check_skill_description_length init
+}
