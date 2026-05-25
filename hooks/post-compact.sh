@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PostCompact hook — re-injects plugin rules and plugin memory after context compaction
+# PostCompact hook — re-injects plugin rules and project-local plugin memory after context compaction.
 
 PAYLOAD=$(cat)
 PROJECT_DIR=$(echo "$PAYLOAD" | jq -r '.cwd // empty' 2>/dev/null)
@@ -7,21 +7,21 @@ PROJECT_DIR=$(echo "$PAYLOAD" | jq -r '.cwd // empty' 2>/dev/null)
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_RULES_FILE="$HOOK_DIR/../CLAUDE.md"
 
+# Source the shared lib for resolve_project_root.
+. "$HOOK_DIR/_lib.sh"
+
 PLUGIN_RULES=""
 if [ -f "$PLUGIN_RULES_FILE" ]; then
   PLUGIN_RULES=$(cat "$PLUGIN_RULES_FILE")
 fi
 
-PROJECT_SLUG=$(echo "$PROJECT_DIR" | tr '/' '-')
-WORKSPACE="$HOME/.claude/projects/$PROJECT_SLUG"
-
 MEMORY_CONTENT=""
-MEMORY_SOURCE=""
-
-PLUGIN_MEMORY_FILE="$WORKSPACE/memory/plugin/MEMORY.md"
-if [ -f "$PLUGIN_MEMORY_FILE" ]; then
-  MEMORY_CONTENT=$(cat "$PLUGIN_MEMORY_FILE")
-  MEMORY_SOURCE="plugin"
+if [ -n "$PROJECT_DIR" ]; then
+  PROJECT_ROOT=$(resolve_project_root "$PROJECT_DIR")
+  PLUGIN_MEMORY_FILE="$PROJECT_ROOT/.claude/memory/plugin/MEMORY.md"
+  if [ -f "$PLUGIN_MEMORY_FILE" ]; then
+    MEMORY_CONTENT=$(cat "$PLUGIN_MEMORY_FILE")
+  fi
 fi
 
 if [ -z "$PLUGIN_RULES" ] && [ -z "$MEMORY_CONTENT" ]; then
