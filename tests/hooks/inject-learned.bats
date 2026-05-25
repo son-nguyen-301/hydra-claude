@@ -427,3 +427,32 @@ _legacy_memory_file_for() {
   [ ! -f "$NEW_FILE" ] || fail "new memory file should not exist"
   [ ! -d "$(dirname "$NEW_FILE")" ] || fail "new memory dir should not exist"
 }
+
+@test "inject-learned: migrates when cwd is a subdirectory of the project (slug uses raw cwd)" {
+  setup_isolated_home
+  setup_isolated_project
+  # Simulate launching Claude from a subdirectory of the project.
+  local SUBDIR="$HYDRA_FAKE_PROJECT/src/deep"
+  mkdir -p "$SUBDIR"
+
+  # The legacy slug must be derived from the SUBDIR cwd, not the project root.
+  local LEGACY_FILE
+  LEGACY_FILE=$(_legacy_memory_file_for "$SUBDIR" "$HYDRA_FAKE_HOME")
+  mkdir -p "$(dirname "$LEGACY_FILE")"
+  printf 'Legacy from subdir.\n' > "$LEGACY_FILE"
+
+  # The new file is at the project root (resolve_project_root walks up to .git).
+  local NEW_FILE
+  NEW_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  [ ! -f "$NEW_FILE" ] || fail "precondition: new file must not exist"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$SUBDIR")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+
+  # Migration must have copied the subdir-keyed legacy memory to the project-root new location.
+  [ -f "$NEW_FILE" ] || fail "new memory file was not created at project root"
+  run cat "$NEW_FILE"
+  assert_output "Legacy from subdir."
+}

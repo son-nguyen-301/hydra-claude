@@ -22,7 +22,11 @@ PLUGIN_MEMORY_FILE="$PROJECT_ROOT/.claude/memory/plugin/MEMORY.md"
 # Activates only if the new project-local memory dir does not exist AND the legacy
 # slug-based dir does. Leaves the legacy location in place as a backup.
 NEW_PLUGIN_DIR="$PROJECT_ROOT/.claude/memory/plugin"
-LEGACY_SLUG=$(echo "$PROJECT_ROOT" | tr '/' '-')
+# Legacy slug is derived from PROJECT_DIR (raw cwd from the payload) — that's
+# what v3.0.0 used to compute the slug, so the legacy directory only exists
+# at that path. Migrating off PROJECT_ROOT would miss memory for users who
+# launched Claude Code from a subdirectory of their project.
+LEGACY_SLUG=$(echo "$PROJECT_DIR" | tr '/' '-')
 LEGACY_PLUGIN_DIR="$HOME/.claude/projects/$LEGACY_SLUG/memory/plugin"
 if [ ! -d "$NEW_PLUGIN_DIR" ] && [ -d "$LEGACY_PLUGIN_DIR" ]; then
   mkdir -p "$NEW_PLUGIN_DIR"

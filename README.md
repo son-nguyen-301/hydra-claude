@@ -102,7 +102,7 @@ Versions before 3.1.0 stored memory at `~/.claude/projects/<slug>/memory/plugin/
 - is non-destructive — the legacy directory is left in place as a backup,
 - emits one stderr log line (`[hydra-claude] migrated memory from ... to ...`) when it activates.
 
-Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<slug>/` to reclaim the disk space.
+Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<slug>/` to reclaim the disk space. (If you launched Claude Code from multiple subdirectories of your project in pre-3.1.0, you may have multiple legacy directories — the migration runs per-cwd, so re-opening Claude Code from each prior subdirectory will trigger its own migration into the same project-local location.)
 
 ---
 
