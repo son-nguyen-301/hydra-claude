@@ -61,6 +61,8 @@ Three Claude Code hooks plus one skill:
 
 The `learn` skill (`skills/learn/SKILL.md`) is the capture procedure: filter the conversation to repo-specific patterns, route each to an existing category or create a new one, write to the topic file, and update the `MEMORY.md` index.
 
+**Mid-session auto-capture.** In addition to the end-of-session scan, the plugin's `CLAUDE.md` instructs Claude to invoke `/hydra-claude:learn` immediately when a high-signal moment fires — an explicit save request, a user correction, a directive, or a validated non-obvious approach. The skill enters "focused mode" and writes just that one pattern without re-scanning the conversation. The end-of-session scan remains as a catch-all safety net.
+
 ---
 
 ## Workspace storage
