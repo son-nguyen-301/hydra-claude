@@ -12,12 +12,12 @@ The project root is resolved as follows. If the current working directory is ins
 Before asking the user ANY clarifying question, check the Q&A memory first:
 
 1. Use the injected `MEMORY.md` scope summaries to pick the 1–2 categories whose scope matches the question's domain, and read only those topic files. Do not scan the whole store. Never read `archive/`.
-2. Look for a `type: qa` entry whose heading matches the question. If there is none, ask the user as normal.
+2. Look for a `type: qa` entry whose heading matches (exactly or is semantically equivalent to) the question. If there is none, ask the user as normal.
 3. If a match exists, check freshness before reuse:
-   - **Decay:** if `captured` + `freshness` is in the past, treat the answer as needs-reconfirm.
+   - **Decay:** if `captured` + `freshness` is in the past, treat the answer as needs-reconfirm (add the `freshness` day count — e.g. `365d` = 365 days — to the `captured` date; if that date is before today, it is stale).
    - **Anchor:** if the entry has an `anchor`, run `git log -1 --format=%cI -- <anchor paths>`; if the anchor's last change is more recent than `captured`, treat the answer as needs-reconfirm.
-4. **Reuse (fresh):** use the stored answer AND announce it explicitly — **never silent**. For example: "Reusing a saved answer — last session you said the test framework is bats. Continuing on that basis." This keeps the user aware of which decisions are carried forward and gives them a chance to correct one even when no staleness signal fired.
-5. **Re-confirm (stale):** surface the answer and ask whether it still holds ("Last session you said X — still true?"). If confirmed, fire trigger 5 below to refresh it. If changed, the new answer supersedes the old (trigger 5 handles the supersede/archive).
+4. **Reuse (fresh):** use the stored answer AND announce it explicitly — **never silent**. For example: "Reusing a saved answer — last session you said the test framework is bats. Continuing on that basis."
+5. **Re-confirm (stale):** surface the answer and ask whether it still holds ("Last session you said X — still true?"). If confirmed, invoke learn in Q&A focused mode with a QA block (trigger 5 format) to refresh it. If changed, the new answer supersedes the old (trigger 5 handles the supersede/archive).
 
 ## Auto-write triggers
 
@@ -40,7 +40,7 @@ When any of these fire mid-conversation, invoke `/hydra-claude:learn` IMMEDIATEL
    WHY: <one or two sentences on why this answer holds>
    ```
 
-For each trigger, derive ONE pattern title and ONE rationale paragraph, then invoke learn with:
+For each of triggers 1–4, derive ONE pattern title and ONE rationale paragraph, then invoke learn with the PATTERN/WHY block below. (Trigger 5 uses the QA block shown in its own entry, not PATTERN/WHY.)
 
 ```
 /hydra-claude:learn
