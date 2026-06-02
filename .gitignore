@@ -1,6 +1,7 @@
 .claude/tasks
 .claude/plans
 .claude/memory
+.claude/enhanced-prompts
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 CLAUDE_PROMPT.md
