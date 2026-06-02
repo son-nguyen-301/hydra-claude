@@ -3,7 +3,7 @@
 - When you discover a repo-specific pattern, receive a user correction, or validate a non-obvious workflow, write it to the appropriate `.claude/memory/plugin/` topic file (relative to the project root).
 - Read `.claude/memory/plugin/MEMORY.md` first to see existing categories before creating new ones.
 - At session end, the `/hydra-claude:learn` skill runs automatically to capture patterns from the conversation. You can also invoke it manually with `/hydra-claude:learn`.
-- For a fresh project with no memory yet, invoke `/hydra-claude:init` to scan the codebase and seed initial entries.
+- For a fresh project with no memory yet, invoke `/hydra-claude:seed-memory` to scan the codebase and seed initial entries.
 
 The project root is resolved as follows. If the current working directory is inside a linked git worktree (when `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`), the project root is the main worktree — the first entry of `git worktree list --porcelain` — so memory consolidates in the main repo rather than the worktree. Otherwise, it is the nearest ancestor of the current working directory containing a `.git/` directory or a `.claude/` directory; if neither marker is found, the project root is the current working directory.
 

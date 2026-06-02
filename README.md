@@ -117,7 +117,7 @@ Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<s
 
 ### Initial setup
 
-For a fresh project with no memory yet, invoke `/hydra-claude:init` to scan the codebase and seed initial entries. The skill reads the project manifests, README, key config files, CI config, the main entry point, and one representative test file — then drafts candidate memory entries grouped by category and presents them for approval. Approved findings are written via the learn skill (so routing and dedup work the same way). Re-runs are safe: existing entries are detected and skipped.
+For a fresh project with no memory yet, invoke `/hydra-claude:seed-memory` to scan the codebase and seed initial entries. The skill reads the project manifests, README, key config files, CI config, the main entry point, and one representative test file — then drafts candidate memory entries grouped by category and presents them for approval. Approved findings are written via the learn skill (so routing and dedup work the same way). Re-runs are safe: existing entries are detected and skipped.
 
 ---
 
