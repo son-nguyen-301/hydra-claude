@@ -8,7 +8,7 @@ This file is the single source of truth for where plugin memory lives. The `lear
 
 All plugin memory for a project lives at `<project-root>/.claude/memory/plugin/`.
 
-`<project-root>` is the nearest ancestor of the current working directory that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback). If neither marker is found before reaching `/`, the project root is the current working directory itself.
+`<project-root>` is resolved as follows. If the current working directory is inside a **linked git worktree** — detectable when `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir` — `<project-root>` is the **main worktree**, taken from the first entry of `git worktree list --porcelain`, so memory consolidates in the main repo rather than the worktree. Otherwise, `<project-root>` is the nearest ancestor of the current working directory that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback); if neither marker is found before reaching `/`, the project root is the current working directory itself.
 
 Layout inside `plugin/`:
 

@@ -14,10 +14,13 @@ Constraints of the enhanced prompt, instead of generic placeholders.
 
 ## Step 1 — Resolve project root & load memory
 
-Resolve the project root: the nearest ancestor of the current working directory that
-contains a `.git/` directory (preferred) or a `.claude/` directory (fallback). Use
-`pwd` and walk up until you find one. If you reach `/` without finding either marker,
-use `pwd`.
+Resolve the project root. If you are inside a **linked git worktree** (detectable when
+`git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`), the project
+root is the **main worktree** — the first entry of `git worktree list --porcelain` — so
+memory is read from and written to the main repo rather than the worktree. Otherwise,
+it is the nearest ancestor of the current working directory that contains a `.git/`
+directory (preferred) or a `.claude/` directory (fallback); use `pwd` and walk up until
+you find one, and if you reach `/` without finding either marker, use `pwd`.
 
 Read `<project-root>/.claude/memory/plugin/MEMORY.md` if it exists. Using the
 one-line scope summaries in the index, select 1–3 topic files whose scope matches the
