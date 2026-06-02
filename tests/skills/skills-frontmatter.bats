@@ -74,30 +74,30 @@ _check_skill_description_length() {
   _check_skill_description_length learn
 }
 
-# ── init ───────────────────────────────────────────────────────────────────────
+# ── seed-memory ──────────────────────────────────────────────────────────────────
 
-@test "skills/init: SKILL.md exists" {
-  _check_skill_file_exists init
+@test "skills/seed-memory: SKILL.md exists" {
+  _check_skill_file_exists seed-memory
 }
 
-@test "skills/init: starts with frontmatter (---)" {
-  _check_skill_frontmatter_start init
+@test "skills/seed-memory: starts with frontmatter (---)" {
+  _check_skill_frontmatter_start seed-memory
 }
 
-@test "skills/init: has name: field in frontmatter" {
-  _check_skill_has_name init
+@test "skills/seed-memory: has name: field in frontmatter" {
+  _check_skill_has_name seed-memory
 }
 
-@test "skills/init: has description: field in frontmatter" {
-  _check_skill_has_description init
+@test "skills/seed-memory: has description: field in frontmatter" {
+  _check_skill_has_description seed-memory
 }
 
-@test "skills/init: file is non-empty (> 5 lines)" {
-  _check_skill_non_empty init
+@test "skills/seed-memory: file is non-empty (> 5 lines)" {
+  _check_skill_non_empty seed-memory
 }
 
-@test "skills/init: description >= 40 chars" {
-  _check_skill_description_length init
+@test "skills/seed-memory: description >= 40 chars" {
+  _check_skill_description_length seed-memory
 }
 
 # ── enhance-prompt ───────────────────────────────────────────────────────────────

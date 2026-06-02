@@ -1,6 +1,6 @@
 ---
-name: init
-description: "Onboard a new project by scanning the codebase and seeding initial memory entries. Invoke when the user says 'initialize project memory', 'onboard this project', 'init memory', 'set up memory for new project', '/init', or when starting work on a project that has no .claude/memory/plugin/ directory yet."
+name: seed-memory
+description: "Onboard a new project by scanning the codebase and seeding initial memory entries. Invoke when the user says 'seed project memory', 'onboard this project', 'set up memory for a new project', or when starting work on a project that has no .claude/memory/plugin/ directory yet."
 ---
 
 > Project-local memory path and output templates are defined in `skills/_shared/workspace-core.md` and `skills/_shared/workspace-templates.md`. Read both files first.
