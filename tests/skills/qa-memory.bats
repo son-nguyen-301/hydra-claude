@@ -37,3 +37,29 @@ CORE="$ROOT/skills/_shared/workspace-core.md"
   run grep -q "archive/" "$CORE"
   assert_success
 }
+
+LEARN="$ROOT/skills/learn/SKILL.md"
+
+@test "learn: recognizes the QA focused-mode block" {
+  run grep -q "QA:" "$LEARN"
+  assert_success
+}
+
+@test "learn: documents the durability gate" {
+  run grep -qi "durab" "$LEARN"
+  assert_success
+}
+
+@test "learn: defines the per-type freshness defaults" {
+  run grep -q "365d" "$LEARN"
+  assert_success
+  run grep -q "90d" "$LEARN"
+  assert_success
+  run grep -q "180d" "$LEARN"
+  assert_success
+}
+
+@test "learn: writes captured date and active status for qa entries" {
+  run grep -q "status: active" "$LEARN"
+  assert_success
+}

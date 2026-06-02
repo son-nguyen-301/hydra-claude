@@ -9,7 +9,9 @@ description: "Capture repo-specific patterns, corrections, and conventions from 
 
 **Focused mode (mid-session capture).** If the user prompt invoking this skill contains a `PATTERN:` line and a `WHY:` line, you were invoked in focused mode. Skip Steps 1-2 entirely — do not scan the conversation. Treat the provided PATTERN as the single pattern title to save, and WHY as its rationale. Jump directly to Step 3 (Read memory index) and follow Steps 3-9 normally for that one pattern.
 
-If no `PATTERN:` / `WHY:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
+**Q&A focused mode.** If the invoking prompt contains a `QA:` line instead of a `PATTERN:` line, you are capturing a reusable clarifying answer. The block provides `QUESTION:`, `ANSWER:`, `TYPE:` (one of `preference`/`fact`/`decision`), `ANCHOR:` (comma-separated files, or `none`), and `WHY:`. Skip Steps 1-2. Before writing, apply the **durability gate**: only capture answers reusable beyond the current task. Drop anything scoped to a single PR/branch/ticket or phrased "this time"/"for now"; when unsure, do not capture and say so. If it passes the gate, use the normalized `QUESTION` as the entry heading and follow Steps 3-9, but write a **`type: qa` entry** (see the Q&A capture rules in Step 6) instead of a plain pattern.
+
+If no `PATTERN:`/`WHY:` and no `QA:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
 
 **Step 1 — Read the conversation**
 Review the current conversation for repo-specific patterns, decisions, corrections, and validated workflows.
@@ -80,6 +82,15 @@ Apply dedup and conflict resolution:
 - **New** (no heading match): append to file.
 
 After writing, check if the new entry is more representative of the category than existing anchors. If so, update the anchors list in the YAML frontmatter (keep max 3 anchors).
+
+**Q&A entry write rules (`type: qa`).** When writing a Q&A entry (Q&A focused mode), build it from the QA block using the `type: qa` template in `workspace-templates.md`:
+
+- Heading = the normalized `QUESTION`.
+- `answer:` = `ANSWER`. `anchor:` = `ANCHOR` (omit the field entirely if `ANCHOR` is `none`).
+- `captured:` = today's date — get it by running `date +%Y-%m-%d`.
+- `status: active`.
+- `freshness:` from `TYPE`: **365d** for `preference`, **90d** for `fact`, **180d** for `decision`.
+- `**Why:**` = `WHY`.
 
 **Step 7 — Update MEMORY.md index**
 If a new category was created, the index was already updated in Step 5. If an existing category's scope description no longer accurately reflects its contents (e.g., the category has evolved), update the one-line description in `<project-root>/.claude/memory/plugin/MEMORY.md`.
