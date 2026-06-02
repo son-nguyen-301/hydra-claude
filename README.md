@@ -111,6 +111,7 @@ Once you've verified the migrated content, you can `rm -rf ~/.claude/projects/<s
 ## Manual usage
 
 - **Invoke learn explicitly:** `/hydra-claude:learn` at any point in a session to capture patterns mid-conversation.
+- **Enhance a prompt:** `/hydra-claude:enhance-prompt <your prompt>` rewrites a rough prompt into a structured one. It is **memory-aware** — it reads the project's `.claude/memory/plugin/` patterns and fills the prompt's context and constraints from those captured facts, asks targeted clarifying questions only for gaps memory can't cover, then writes the result to a markdown artifact under `.claude/enhanced-prompts/` and prints its path. Manual only; never auto-triggered.
 - **Write memory by hand:** Edit any topic file under `<project-root>/.claude/memory/plugin/` directly. Add an entry to `MEMORY.md` if you create a new category.
 - **Inspect memory:** `cat <project-root>/.claude/memory/plugin/MEMORY.md` to see the routing index.
 
