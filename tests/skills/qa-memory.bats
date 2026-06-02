@@ -107,3 +107,10 @@ CLAUDEMD="$ROOT/CLAUDE.md"
   run grep -q "QA:" "$CLAUDEMD"
   assert_success
 }
+
+ENHANCE="$ROOT/skills/enhance-prompt/SKILL.md"
+
+@test "enhance-prompt: notes that type: qa entries are usable facts" {
+  run grep -q "type: qa" "$ENHANCE"
+  assert_success
+}

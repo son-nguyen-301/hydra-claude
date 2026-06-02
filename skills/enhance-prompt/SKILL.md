@@ -30,6 +30,8 @@ corrections) are the source for the Context and Constraints dimensions below.
 If `MEMORY.md` does not exist, note that no memory is available and proceed with
 memory-free behavior (the enhancement still works; it just can't cite repo facts).
 
+Q&A entries (`type: qa`) in those topic files are also captured facts — use fresh ones to fill Context and Constraints. Skip any entry whose `status:` is `superseded` or `needs-reconfirm`, and do not treat a stale answer as authoritative.
+
 ## Step 2 — Load best practices
 
 Read `skills/enhance-prompt/references/best-practices.md` to load the full checklist
