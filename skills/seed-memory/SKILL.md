@@ -7,7 +7,7 @@ description: "Onboard a new project by scanning the codebase and seeding initial
 
 This skill scans a project's codebase and seeds initial memory at `<project-root>/.claude/memory/plugin/` by drafting candidate findings, getting user approval, deduping against any existing memory, and writing approved findings via the `learn` skill in focused mode.
 
-**Project root resolution.** Same as the learn skill: the nearest ancestor of the current working directory containing `.git/` (preferred) or `.claude/` (fallback). If neither marker is found, use the current working directory. Memory lives at `<project-root>/.claude/memory/plugin/`.
+**Project root resolution.** Same as the learn skill: if you are inside a **linked git worktree** (detectable when `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`), the project root is the **main worktree** — the first entry of `git worktree list --porcelain` — so memory is written to the main repo rather than the worktree. Otherwise, it is the nearest ancestor of the current working directory containing `.git/` (preferred) or `.claude/` (fallback); if neither marker is found, use the current working directory. Memory lives at `<project-root>/.claude/memory/plugin/`.
 
 ---
 
