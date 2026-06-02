@@ -11,11 +11,17 @@ CORE="$ROOT/skills/_shared/workspace-core.md"
   assert_success
 }
 
-@test "templates: qa template lists the freshness-contract fields" {
+@test "templates: qa template documents the anchor: field" {
   run grep -Eq "anchor:" "$TEMPLATES"
   assert_success
+}
+
+@test "templates: qa template documents the status: field" {
   run grep -Eq "status:" "$TEMPLATES"
   assert_success
+}
+
+@test "templates: qa template documents the freshness: field" {
   run grep -Eq "freshness:" "$TEMPLATES"
   assert_success
 }

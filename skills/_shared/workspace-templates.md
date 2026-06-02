@@ -60,6 +60,8 @@ freshness: {window}       # 365d preference · 90d fact · 180d decision
 
 Plain pattern entries carry none of these fields and are unchanged. Routing, dedup, and conflict resolution treat a Q&A heading the same as any other entry heading.
 
+---
+
 ## Archive layout
 
 Superseded and confirmed-stale entries are moved out of the live topic file into `<project-root>/.claude/memory/plugin/archive/{original-filename}`. Archived entries are **never injected at session start and never read during check-before-ask lookups** — they exist only for audit/history. Live topic files hold only `status: active` entries.

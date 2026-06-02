@@ -20,8 +20,6 @@ Layout inside `plugin/`:
 
 The category filenames are not predefined; they emerge as the learn skill encounters new patterns. See `workspace-templates.md` for the topic-file template.
 
-The `archive/` subdirectory is write-on-death only — entries land there when superseded or confirmed stale, and nothing in the plugin ever injects or reads it back.
-
 ---
 
 ## Legacy home-directory path (pre-3.1.0)
