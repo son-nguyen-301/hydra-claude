@@ -16,8 +16,11 @@ Layout inside `plugin/`:
 |------------------|------------------------------------------------------------------|
 | `MEMORY.md`      | One-line index of all categories with their scope summaries.     |
 | `*.md`           | Topic files: one category per file, each with YAML frontmatter.  |
+| `archive/`       | Superseded/stale entries moved out of live files. Never injected; never read during lookups. |
 
 The category filenames are not predefined; they emerge as the learn skill encounters new patterns. See `workspace-templates.md` for the topic-file template.
+
+The `archive/` subdirectory is write-on-death only — entries land there when superseded or confirmed stale, and nothing in the plugin ever injects or reads it back.
 
 ---
 
