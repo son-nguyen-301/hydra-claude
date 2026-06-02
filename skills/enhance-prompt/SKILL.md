@@ -92,7 +92,7 @@ Rewrite the prompt incorporating the missing elements identified in Steps 4–5.
 4. Write the artifact to
    `<project-root>/.claude/enhanced-prompts/<timestamp>-<slug>.md` with this structure:
 
-   ```markdown
+   ````markdown
    # Enhanced prompt — <slug>
 
    ## Enhanced prompt
@@ -106,7 +106,7 @@ Rewrite the prompt incorporating the missing elements identified in Steps 4–5.
 
    ## Memory used
    - <topic category that informed the context>, or "No project memory was available."
-   ```
+   ````
 
 ## Step 8 — Present & confirm
 
