@@ -63,3 +63,23 @@ LEARN="$ROOT/skills/learn/SKILL.md"
   run grep -q "status: active" "$LEARN"
   assert_success
 }
+
+@test "learn: documents contradiction-supersede for qa entries" {
+  run grep -qi "superseded" "$LEARN"
+  assert_success
+}
+
+@test "learn: moves dead entries to archive" {
+  run grep -q "archive/" "$LEARN"
+  assert_success
+}
+
+@test "learn: proliferation advisory bumped to 20" {
+  run grep -q "exceeds 20" "$LEARN"
+  assert_success
+}
+
+@test "learn: names MEMORY.md size as the true injection guard" {
+  run grep -qi "true guard" "$LEARN"
+  assert_success
+}

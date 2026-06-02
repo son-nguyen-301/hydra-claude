@@ -93,11 +93,19 @@ After writing, check if the new entry is more representative of the category tha
 - `**Why:**` = `WHY`.
 - Do NOT add a Q&A entry's question heading to the category `anchors` list. Anchors are reserved for representative pattern titles — skip the anchors-update (the closing sentence of Step 6) for `type: qa` entries.
 
+**Q&A contradiction-supersede.** Before appending a `type: qa` entry, check the target file for an existing `type: qa` entry with the same (or semantically equivalent) question heading:
+
+- **Same question, same answer** → refresh the existing entry's `captured:` to today and ensure `status: active`. Do not duplicate.
+- **Same question, different answer** → the new answer wins. Set the old entry's `status: superseded`, then **move the old entry out of the live file into `<project-root>/.claude/memory/plugin/archive/{same-filename}`** (create `archive/` with `mkdir -p` if needed; append the superseded entry there). Write the new entry as `status: active` in the live file.
+- **No existing match** → append the new `type: qa` entry normally.
+
+Archived entries are never injected and never read during lookups — `archive/` is write-only from this skill's perspective.
+
 **Step 7 — Update MEMORY.md index**
 If a new category was created, the index was already updated in Step 5. If an existing category's scope description no longer accurately reflects its contents (e.g., the category has evolved), update the one-line description in `<project-root>/.claude/memory/plugin/MEMORY.md`.
 
 **Step 8 — Proliferation control**
-If the number of categories in MEMORY.md exceeds 15, warn the user and suggest merging the two most similar categories. Do not auto-merge — present the candidates and let the user decide. If the user declines the merge, proceed normally. The warning is advisory only — the system functions correctly with any number of categories. The threshold exists to encourage periodic housekeeping, not to enforce a hard limit.
+If the number of categories in MEMORY.md exceeds 20, warn the user and suggest merging the two most similar categories. (Q&A entries route into existing domain categories rather than creating their own, so the count grows slowly; the advisory was raised from 15 to 20 to leave room for Q&A-native domains such as `preferences` or `decisions`.) The category count is only a soft proxy — the **true guard** against injection bloat is the `MEMORY.md` size budget in Step 9, since `MEMORY.md` is the file actually injected at session start. Do not auto-merge — present the candidates and let the user decide. If the user declines the merge, proceed normally. The warning is advisory only — the system functions correctly with any number of categories. The threshold exists to encourage periodic housekeeping, not to enforce a hard limit.
 
 **Step 9 — Length budget check**
 Each topic file max ~100 lines. MEMORY.md max 200 lines. Warn if exceeded.
