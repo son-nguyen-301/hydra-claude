@@ -9,7 +9,9 @@ description: "Capture repo-specific patterns, corrections, and conventions from 
 
 **Focused mode (mid-session capture).** If the user prompt invoking this skill contains a `PATTERN:` line and a `WHY:` line, you were invoked in focused mode. Skip Steps 1-2 entirely — do not scan the conversation. Treat the provided PATTERN as the single pattern title to save, and WHY as its rationale. Jump directly to Step 3 (Read memory index) and follow Steps 3-9 normally for that one pattern.
 
-If no `PATTERN:` / `WHY:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
+**Q&A focused mode.** If the invoking prompt contains a `QA:` block (a `QA:` line with `QUESTION:`, `ANSWER:`, `TYPE:`, `ANCHOR:`, and `WHY:` fields), you are in Q&A focused mode, capturing a reusable clarifying answer. (`TYPE` — one of `preference`/`fact`/`decision` — determines the entry's `freshness:` window.) Skip Steps 1-2. Before writing, apply the **durability gate**: only capture answers reusable beyond the current task. Drop anything scoped to a single PR/branch/ticket or phrased "this time"/"for now"; when unsure, do not capture and say so. If it passes the gate, use the normalized `QUESTION` as the entry heading and follow Steps 3-9, but write a **`type: qa` entry** (see the Q&A capture rules in Step 6) instead of a plain pattern.
+
+If no `PATTERN:`/`WHY:` and no `QA:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
 
 **Step 1 — Read the conversation**
 Review the current conversation for repo-specific patterns, decisions, corrections, and validated workflows.
@@ -76,16 +78,34 @@ If the target topic file does not have a YAML frontmatter block (legacy file fro
 
 Apply dedup and conflict resolution:
 - **Duplicate** (same heading, semantically equivalent): skip or merge `**Why:**` lines.
-- **Conflict** (same heading, contradictory content): overwrite in-place with `<!-- Replaced: ... -->` comment.
+- **Conflict** (same heading, contradictory content): overwrite in-place with `<!-- Replaced: ... -->` comment. *(For `type: qa` entries, do NOT use this in-place overwrite — follow the Q&A contradiction-supersede rules below instead.)*
 - **New** (no heading match): append to file.
 
 After writing, check if the new entry is more representative of the category than existing anchors. If so, update the anchors list in the YAML frontmatter (keep max 3 anchors).
+
+**Q&A entry write rules (`type: qa`).** *(Step 6 variant — applies only in Q&A focused mode)* When writing a Q&A entry (Q&A focused mode), build it from the QA block using the `type: qa` template in `workspace-templates.md`:
+
+- Heading = the normalized `QUESTION`.
+- `answer:` = `ANSWER`. `anchor:` = `ANCHOR` (omit the field entirely if `ANCHOR` is `none`; the omission is gated on the `ANCHOR` value, not on `TYPE` — a preference may still carry an anchor).
+- `captured:` = today's date — get it by running `date +%Y-%m-%d`.
+- `status: active`.
+- `freshness:` from `TYPE`: **365d** for `preference`, **90d** for `fact`, **180d** for `decision`.
+- `**Why:**` = `WHY`.
+- Do NOT add a Q&A entry's question heading to the category `anchors` list. Anchors are reserved for representative pattern titles — skip the anchors-update (the closing sentence of Step 6) for `type: qa` entries.
+
+**Q&A contradiction-supersede.** This overrides the generic **Conflict** rule above for `type: qa` entries. Before appending a `type: qa` entry, check the target file for an existing `type: qa` entry with the same (or semantically equivalent) question heading:
+
+- **Same question, same answer** → edit the existing entry in-place: replace its `captured:` value with today's date (from `date +%Y-%m-%d`) and confirm `status:` reads `active`. Do NOT create a second entry.
+- **Same question, different answer** → the new answer wins. Set the old entry's `status: superseded`, then **move the old entry out of the live file into `<project-root>/.claude/memory/plugin/archive/`** using the same filename as the live topic file (create `archive/` with `mkdir -p` if needed; append the entry there as-is, keeping its `status: superseded` marker). Write the new entry as `status: active` in the live file.
+- **No existing match** → append the new `type: qa` entry normally.
+
+Archived entries are never injected and never read during lookups — `archive/` is write-only from this skill's perspective.
 
 **Step 7 — Update MEMORY.md index**
 If a new category was created, the index was already updated in Step 5. If an existing category's scope description no longer accurately reflects its contents (e.g., the category has evolved), update the one-line description in `<project-root>/.claude/memory/plugin/MEMORY.md`.
 
 **Step 8 — Proliferation control**
-If the number of categories in MEMORY.md exceeds 15, warn the user and suggest merging the two most similar categories. Do not auto-merge — present the candidates and let the user decide. If the user declines the merge, proceed normally. The warning is advisory only — the system functions correctly with any number of categories. The threshold exists to encourage periodic housekeeping, not to enforce a hard limit.
+If the number of categories in MEMORY.md exceeds 20, warn the user and suggest merging the two most similar categories. (Q&A entries prefer routing into existing domain categories, but may create new ones — such as `preferences` or `decisions` — when none fits; the advisory was raised from 15 to 20 to accommodate this.) The category count is only a soft proxy — the **true guard** against injection bloat is the `MEMORY.md` size budget in Step 9, since `MEMORY.md` is the file actually injected at session start. Do not auto-merge — present the candidates and let the user decide. If the user declines the merge, proceed normally. The warning is advisory only — the system functions correctly with any number of categories. The threshold exists to encourage periodic housekeeping, not to enforce a hard limit.
 
 **Step 9 — Length budget check**
 Each topic file max ~100 lines. MEMORY.md max 200 lines. Warn if exceeded.

@@ -37,3 +37,31 @@ anchors:
 ```
 
 Note on `---` delimiters: The YAML frontmatter is delimited by the first two `---` lines at the top of the file. The `---` lines between entries (separating `## heading` blocks) are entry separators and are distinguished by position — they appear between entries, not at the top of the file.
+
+---
+
+## Q&A entry template (`type: qa`)
+
+A Q&A entry is an ordinary topic-file entry that also carries a question and a freshness contract. The `## heading` is the **normalized question**. These fields sit directly under the heading, before the `**Why:**` line:
+
+```markdown
+## {Normalized question}
+type: qa
+answer: {short answer}
+anchor: {comma-separated files/config the answer depends on; omit for preferences}
+captured: {YYYY-MM-DD}
+status: active            # active | superseded | needs-reconfirm
+freshness: {window}       # 365d preference · 90d fact · 180d decision
+
+**Why:** {why this answer holds, with context}
+
+---
+```
+
+Plain pattern entries carry none of these fields and are unchanged. Routing, dedup, and conflict resolution treat a Q&A heading the same as any other entry heading.
+
+---
+
+## Archive layout
+
+Superseded and confirmed-stale entries are moved out of the live topic file into `<project-root>/.claude/memory/plugin/archive/{original-filename}`. Archived entries are **never injected at session start and never read during check-before-ask lookups** — they exist only for audit/history. Live topic files hold only `status: active` entries.
