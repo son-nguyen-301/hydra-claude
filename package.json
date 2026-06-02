@@ -1,6 +1,6 @@
 {
   "name": "hydra-claude",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Memory provider for Claude Code — auto-captures repo-specific patterns at session end and re-injects them on session start and post-compact.",
   "claude": {
     "type": "plugin"
