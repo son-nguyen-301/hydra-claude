@@ -83,3 +83,27 @@ LEARN="$ROOT/skills/learn/SKILL.md"
   run grep -qi "true guard" "$LEARN"
   assert_success
 }
+
+CLAUDEMD="$ROOT/CLAUDE.md"
+
+@test "CLAUDE.md: has a check-before-ask retrieval rule" {
+  run grep -qi "before asking" "$CLAUDEMD"
+  assert_success
+}
+
+@test "CLAUDE.md: requires reuse to be announced, never silent" {
+  run grep -qi "never silent" "$CLAUDEMD"
+  assert_success
+}
+
+@test "CLAUDE.md: lazy anchor staleness check uses git log" {
+  run grep -q "git log" "$CLAUDEMD"
+  assert_success
+}
+
+@test "CLAUDE.md: adds the clarifying-answer auto-write trigger with a QA block" {
+  run grep -qi "Clarifying answer" "$CLAUDEMD"
+  assert_success
+  run grep -q "QA:" "$CLAUDEMD"
+  assert_success
+}
