@@ -30,7 +30,7 @@ corrections) are the source for the Context and Constraints dimensions below.
 If `MEMORY.md` does not exist, note that no memory is available and proceed with
 memory-free behavior (the enhancement still works; it just can't cite repo facts).
 
-Q&A entries (`type: qa`) in those topic files are also captured facts — use fresh ones to fill Context and Constraints. Skip any entry whose `status:` is `superseded` or `needs-reconfirm`, and do not treat a stale answer as authoritative.
+Q&A entries (`type: qa`) in those topic files are also captured facts — use fresh ones to fill Context and Constraints. Before relying on a Q&A entry, apply the same freshness check the check-before-ask rule uses: treat it as stale if `captured` + `freshness` is in the past (add the `freshness` day count to `captured`; if that date is before today, it is stale), or — when the entry has an `anchor` — if `git log -1 --format=%cI -- <anchor paths>` shows a change more recent than `captured`. Do not fill the prompt from a stale Q&A answer; treat it as a gap to ask about or omit instead.
 
 ## Step 2 — Load best practices
 
