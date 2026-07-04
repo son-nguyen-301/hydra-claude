@@ -24,11 +24,20 @@ LAST_FIRED=0
 if [ -f "$FLAG_FILE" ]; then
   LAST_FIRED=$(cat "$FLAG_FILE" 2>/dev/null)
   case "$LAST_FIRED" in ''|*[!0-9]*) LAST_FIRED=0 ;; esac
+  LAST_FIRED=$((10#$LAST_FIRED))
 fi
 
 # Extract token count from Stop payload (context_window.input_tokens)
 TOTAL_INPUT=$(echo "$PAYLOAD" | jq -r '.context_window.input_tokens // 0' 2>/dev/null || echo 0)
 case "$TOTAL_INPUT" in ''|*[!0-9]*) TOTAL_INPUT=0 ;; esac
+TOTAL_INPUT=$((10#$TOTAL_INPUT))
+
+# Compaction can shrink input_tokens below the stored mark; re-baseline so
+# future growth can re-arm instead of chasing the pre-compaction high water.
+if [ "$TOTAL_INPUT" -lt "$LAST_FIRED" ]; then
+  printf '%s' "$TOTAL_INPUT" > "$FLAG_FILE" 2>/dev/null
+  exit 0
+fi
 
 if [ $(( TOTAL_INPUT - LAST_FIRED )) -ge "$MIN_TOKENS" ]; then
   printf '%s' "$TOTAL_INPUT" > "$FLAG_FILE"

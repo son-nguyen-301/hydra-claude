@@ -102,3 +102,29 @@ teardown() {
   run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
   assert_failure 2
 }
+
+@test "session-end-learn: shrunken token count re-baselines the flag without firing" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-shrink.jsonl.flag"
+  printf '20000' > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-shrink.jsonl","context_window":{"input_tokens":6000}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_success
+  run cat "$flag"
+  assert_output "6000"
+}
+
+@test "session-end-learn: fires again after re-baseline once delta reaches 5k" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-rearm.jsonl.flag"
+  printf '6000' > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-rearm.jsonl","context_window":{"input_tokens":11500}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_failure 2
+}
+
+@test "session-end-learn: leading-zero flag content does not error" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-octal.jsonl.flag"
+  printf '008' > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-octal.jsonl","context_window":{"input_tokens":6000}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>&1' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  refute_output --partial "value too great for base"
+}
