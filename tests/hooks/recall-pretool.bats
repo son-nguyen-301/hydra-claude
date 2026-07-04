@@ -189,3 +189,14 @@ EOF
   run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision // \"none\"'" _ "$output"
   assert_output "none"
 }
+
+@test "deny gate: unwritable state file degrades to advisory, not permanent deny" {
+  _write_correction_topic
+  touch "$TMPDIR/hydra-recall-sessRO"
+  chmod 400 "$TMPDIR/hydra-recall-sessRO"
+  _run_bash "git push --force origin main" sessRO
+  assert_success
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision // \"none\"'" _ "$output"
+  assert_output "none"
+  chmod 600 "$TMPDIR/hydra-recall-sessRO"
+}

@@ -45,7 +45,7 @@ while IFS=$'\t' read -r topic class; do
   [ -z "$(topic_state "$STATE_FILE" "$topic")" ] || continue
   GATE_ENTRIES=$(extract_entries_by_class "$MEM_DIR/$topic" "correction|directive")
   [ -n "$GATE_ENTRIES" ] || continue
-  record_topic "$STATE_FILE" "$topic" "denied"
+  record_topic "$STATE_FILE" "$topic" "denied" 2>/dev/null || continue
   REASON="Automated memory gate — not a user denial and not an error. A saved correction/directive applies to this exact action:
 
 $GATE_ENTRIES
@@ -100,7 +100,7 @@ CONTEXT=$(printf '%s' "$CONTEXT" | truncate_at_entry_boundary 9500 \
 # newline-separated topic names built from trusted TSV-derived text.
 while IFS= read -r topic; do
   [ -n "$topic" ] || continue
-  [ -n "$(topic_block_survived "$CONTEXT" "$topic")" ] && record_topic "$STATE_FILE" "$topic" "full"
+  [ -n "$(topic_block_survived "$CONTEXT" "$topic")" ] && record_topic "$STATE_FILE" "$topic" "full" 2>/dev/null
 done <<EOF
 $NEW_TOPICS
 EOF
