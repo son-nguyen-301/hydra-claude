@@ -103,10 +103,10 @@ An optional line directly under an entry's `## ` heading (same position as `type
 
 ```markdown
 ## Never force-push to shared branches
-class: correction | directive | pattern | preference
+class: correction
 ```
 
-Valid values (absent = `pattern`): `correction` and `directive` entries participate in the PreToolUse deny-once gate; the learn skill assigns the class from the capture trigger (user correction → `correction`, "always/never X" → `directive`, validated approach → `pattern`, Q&A preference → `preference`).
+Valid `class:` values: `correction`, `directive`, `pattern`, `preference` — one value per entry (absent = `pattern`). `correction` and `directive` entries participate in the PreToolUse deny-once gate; the learn skill assigns the class from the capture trigger (user correction → `correction`, "always/never X" → `directive`, validated approach → `pattern`, Q&A preference → `preference`).
 
 ## Machine index — `triggers.tsv`
 
