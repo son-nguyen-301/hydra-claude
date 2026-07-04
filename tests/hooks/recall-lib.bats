@@ -111,3 +111,113 @@ _lib() { bash -c ". \"$LIB\"; $1"; }
   run _lib "match_tool \"$TSV\" command 'run zebra now' /proj"
   assert_line "$(printf 'no-newline.md\tpattern\t1')"
 }
+
+# ── part 2: extraction, freshness, truncation ────────────────────────────────
+
+_write_qa_topic() {
+  cat > "$MEM_DIR/qa.md" <<EOF
+---
+scope: "Q&A."
+---
+
+## What test framework do we use?
+type: qa
+answer: bats
+captured: $1
+freshness: 365d
+
+**Why:** vendored bats-core.
+
+---
+
+## Plain pattern entry
+
+Body line.
+
+**Why:** reasons.
+
+---
+EOF
+}
+
+@test "extract_entries: skips frontmatter, keeps all entries" {
+  _write_qa_topic 2020-01-01
+  run _lib "extract_entries \"$MEM_DIR/qa.md\""
+  assert_line --partial "## What test framework do we use?"
+  assert_line --partial "## Plain pattern entry"
+  refute_line --partial 'scope:'
+}
+
+@test "extract_entries_by_class: keeps only matching classes" {
+  cat > "$MEM_DIR/c.md" <<'EOF'
+---
+scope: "x"
+---
+
+## Keep me
+class: correction
+
+A.
+
+---
+
+## Drop me
+
+B.
+
+---
+EOF
+  run _lib "extract_entries_by_class \"$MEM_DIR/c.md\" 'correction|directive'"
+  assert_line --partial "## Keep me"
+  refute_line --partial "## Drop me"
+}
+
+@test "date_to_epoch: parses ISO date on this platform" {
+  run _lib 'date_to_epoch 2026-01-02'
+  assert_success
+  [ "$output" -gt 1767000000 ]
+}
+
+@test "qa_freshness: recent capture within window is fresh" {
+  run _lib "qa_freshness $(date +%Y-%m-%d) 365d '' /nonexistent"
+  assert_output "fresh"
+}
+
+@test "qa_freshness: expired window is stale" {
+  run _lib "qa_freshness 2020-01-01 90d '' /nonexistent"
+  assert_output "stale"
+}
+
+@test "qa_freshness: anchor changed after capture is stale" {
+  local repo="$BATS_TEST_TMPDIR/repo"
+  mkdir -p "$repo" && cd "$repo"
+  git init -q . && git config user.email t@t && git config user.name t
+  echo x > anchored.txt && git add . && git commit -qm one
+  run _lib "qa_freshness 2020-01-01 36500d anchored.txt \"$repo\""
+  assert_output "stale"
+}
+
+@test "annotate_qa_entries: qa heading gets a freshness tag, plain entry untouched" {
+  _write_qa_topic "$(date +%Y-%m-%d)"
+  run _lib "extract_entries \"$MEM_DIR/qa.md\" | annotate_qa_entries /nonexistent"
+  assert_line --partial "## What test framework do we use? [fresh]"
+  assert_line "## Plain pattern entry"
+}
+
+@test "annotate_qa_entries: expired qa entry tagged needs-reconfirm" {
+  _write_qa_topic 2020-01-01
+  run _lib "extract_entries \"$MEM_DIR/qa.md\" | annotate_qa_entries /nonexistent"
+  assert_line --partial "[needs-reconfirm"
+}
+
+@test "truncate: under budget passes through unchanged" {
+  run _lib "printf '## A\nbody\n' | truncate_at_entry_boundary 9500 'PTR'"
+  refute_line "PTR"
+  assert_line "## A"
+}
+
+@test "truncate: drops whole entries over budget and appends pointer" {
+  run _lib "{ printf '## A\n'; head -c 300 /dev/zero | tr '\0' 'a'; printf '\n## B\nsmall\n'; } | truncate_at_entry_boundary 250 'PTR'"
+  assert_line "PTR"
+  refute_line "## B"
+}

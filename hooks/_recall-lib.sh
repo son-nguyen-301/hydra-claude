@@ -91,3 +91,134 @@ rank_matches() {
     printf "%d\t%d\t%s\t%s\n", p, -$3, $1, $2
   }' | sort -t "$(printf '\t')" -k1,1n -k2,2n | cut -f3,4
 }
+
+# ── entry extraction ──────────────────────────────────────────────────────────
+
+# Print all `## ` entries from a topic file (frontmatter skipped).
+extract_entries() {
+  local topic_file="$1"
+  [ -f "$topic_file" ] || return 0
+  awk '
+    NR == 1 && /^---[[:space:]]*$/ { in_fm = 1; next }
+    in_fm && /^---[[:space:]]*$/   { in_fm = 0; next }
+    in_fm                          { next }
+    /^## /                         { in_body = 1 }
+    in_body                        { print }
+  ' "$topic_file"
+}
+
+# Print only entries whose class: line matches the ERE (e.g. "correction|directive").
+extract_entries_by_class() {
+  local topic_file="$1" class_re="$2"
+  extract_entries "$topic_file" | awk -v re="$class_re" '
+    /^## / { if (keep) printf "%s", buf; buf = ""; keep = 0 }
+    { buf = buf $0 "\n" }
+    $0 ~ ("^class:[[:space:]]*(" re ")[[:space:]]*$") { keep = 1 }
+    END { if (keep) printf "%s", buf }
+  '
+}
+
+# ── Q&A freshness ─────────────────────────────────────────────────────────────
+
+# Epoch seconds for YYYY-MM-DD. Tries BSD date (macOS) then GNU date. Empty on failure.
+date_to_epoch() {
+  local d="$1"
+  date -j -f '%Y-%m-%d' "$d" '+%s' 2>/dev/null && return 0
+  date -d "$d" '+%s' 2>/dev/null
+}
+
+# Echo "fresh" or "stale". Stale when: unparseable fields, decay window passed,
+# or any comma-separated anchor path changed (git) after the captured date.
+qa_freshness() {
+  local captured="$1" freshness="$2" anchor_csv="$3" project_root="$4"
+  local now cap_epoch days
+  now=$(date '+%s')
+  cap_epoch=$(date_to_epoch "$captured")
+  [ -n "$cap_epoch" ] || { echo stale; return 0; }
+  days="${freshness%d}"
+  case "$days" in ''|*[!0-9]*) echo stale; return 0 ;; esac
+  if [ $(( cap_epoch + days * 86400 )) -lt "$now" ]; then
+    echo stale; return 0
+  fi
+  if [ -n "$anchor_csv" ] && command -v git >/dev/null 2>&1; then
+    local old_ifs="$IFS" anchor last_iso last_epoch
+    IFS=','
+    for anchor in $anchor_csv; do
+      IFS="$old_ifs"
+      anchor="${anchor# }"
+      last_iso=$(git -C "$project_root" log -1 --format=%cI -- "$anchor" 2>/dev/null)
+      if [ -n "$last_iso" ]; then
+        last_epoch=$(date_to_epoch "${last_iso%%T*}")
+        if [ -n "$last_epoch" ] && [ "$last_epoch" -gt "$cap_epoch" ]; then
+          echo stale; return 0
+        fi
+      fi
+      IFS=','
+    done
+    IFS="$old_ifs"
+  fi
+  echo fresh
+}
+
+# stdin→stdout: tag each `type: qa` entry heading with [fresh] / [needs-reconfirm…].
+# Globals prefixed _aq_ to stay bash-3.2 safe without nameref tricks.
+_aq_flush() {
+  [ -n "$_aq_buf" ] || return 0
+  if [ "$_aq_is_qa" = "1" ] && [ -n "$_aq_captured" ] && [ -n "$_aq_freshness" ]; then
+    local status
+    status=$(qa_freshness "$_aq_captured" "$_aq_freshness" "$_aq_anchor" "$_aq_root")
+    if [ "$status" = "fresh" ]; then
+      printf '%s' "$_aq_buf" | sed '1s/$/ [fresh]/'
+    else
+      printf '%s' "$_aq_buf" | sed '1s/$/ [needs-reconfirm — ask the user before relying on this]/'
+    fi
+  else
+    printf '%s' "$_aq_buf"
+  fi
+}
+
+annotate_qa_entries() {
+  _aq_root="$1"
+  _aq_buf=""; _aq_is_qa=0; _aq_captured=""; _aq_freshness=""; _aq_anchor=""
+  local line v
+  while IFS= read -r line; do
+    case "$line" in
+      '## '*)
+        _aq_flush
+        _aq_buf="$line"$'\n'; _aq_is_qa=0; _aq_captured=""; _aq_freshness=""; _aq_anchor=""
+        continue
+        ;;
+      'type: qa'*)    _aq_is_qa=1 ;;
+      'captured: '*)  v="${line#captured: }";  _aq_captured=$(printf '%s' "${v%%#*}" | awk '{print $1}') ;;
+      'freshness: '*) v="${line#freshness: }"; _aq_freshness=$(printf '%s' "${v%%#*}" | awk '{print $1}') ;;
+      'anchor: '*)    v="${line#anchor: }";    _aq_anchor="${v%%#*}" ;;
+    esac
+    _aq_buf="$_aq_buf$line"$'\n'
+  done
+  _aq_flush
+}
+
+# ── output budget ─────────────────────────────────────────────────────────────
+
+# stdin→stdout: emit whole `## ` chunks while they fit in max_chars; once a chunk
+# is dropped, drop everything after it too and append the pointer line.
+truncate_at_entry_boundary() {
+  local max="$1" pointer="$2"
+  awk -v max="$max" -v ptr="$pointer" '
+    function flush() {
+      if (buf == "") return
+      if (!truncated && total + length(buf) <= max) {
+        printf "%s", buf; total += length(buf)
+      } else {
+        truncated = 1
+      }
+      buf = ""
+    }
+    /^## / { flush() }
+    { buf = buf $0 "\n" }
+    END {
+      flush()
+      if (truncated && ptr != "") print ptr
+    }
+  '
+}
