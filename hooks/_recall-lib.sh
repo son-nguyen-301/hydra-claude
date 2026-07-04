@@ -198,6 +198,22 @@ annotate_qa_entries() {
   _aq_flush
 }
 
+# True (prints "yes") when a "### From $topic" marker line in $context is
+# immediately followed — before the next "### From " marker or EOF — by an
+# entry heading line ("## "). Truncation flushes at "## " boundaries, so a
+# topic's marker can survive alongside the *previous* topic's surviving chunk
+# even though this topic's own entry got truncated away; a plain substring
+# check for the marker alone is therefore not enough to know the topic's
+# content actually reached context.
+topic_block_survived() {
+  local context="$1" topic="$2"
+  printf '%s' "$context" | awk -v marker="### From $topic" '
+    $0 == marker    { found = 1; next }
+    found && /^### From / { exit }
+    found && /^## /       { print "yes"; exit }
+  '
+}
+
 # ── output budget ─────────────────────────────────────────────────────────────
 
 # stdin→stdout: emit whole `## ` chunks while they fit in max_chars; once a chunk

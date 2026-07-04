@@ -28,6 +28,12 @@ MATCHES=$(match_prompt "$MEM_DIR/triggers.tsv" "$PROMPT_LC" | rank_matches | hea
 STATE_FILE=$(recall_state_file "$SESSION_ID")
 FULL_BLOCKS=""
 POINTER_LINES=""
+NEW_TOPICS=""
+# Recording of "full" topics is deferred until after truncation below, so a topic
+# whose block gets truncated away isn't marked as surfaced (it would otherwise be
+# silently lost for the rest of the session — see CONTEXT truncation below).
+# heredoc (not a pipe) so loop-body variable mutations (FULL_BLOCKS, POINTER_LINES,
+# NEW_TOPICS) persist after the loop; MATCHES is trusted TSV-derived text.
 while IFS=$'\t' read -r topic class; do
   [ -n "$topic" ] || continue
   if [ -n "$(topic_state "$STATE_FILE" "$topic")" ]; then
@@ -36,7 +42,7 @@ while IFS=$'\t' read -r topic class; do
     ENTRIES=$(extract_entries "$MEM_DIR/$topic" | annotate_qa_entries "$PROJECT_ROOT")
     [ -n "$ENTRIES" ] || continue
     FULL_BLOCKS="$FULL_BLOCKS### From $topic"$'\n'"$ENTRIES"$'\n'
-    record_topic "$STATE_FILE" "$topic" "full"
+    NEW_TOPICS="$NEW_TOPICS$topic"$'\n'
   fi
 done <<EOF
 $MATCHES
@@ -49,6 +55,19 @@ CONTEXT="Saved memory matches this request. Apply these before deciding; announc
 $FULL_BLOCKS$POINTER_LINES"
 CONTEXT=$(printf '%s' "$CONTEXT" | truncate_at_entry_boundary 9500 \
   "…truncated — read the remaining topic files in $MEM_DIR yourself.")
+
+# Only record a topic as "full" once we know its block survived truncation above.
+# Topics dropped by truncate_at_entry_boundary are NOT recorded, so they remain
+# eligible to inject in full on a later, smaller prompt match. A plain substring
+# check for "### From $topic" is not sufficient — see topic_block_survived.
+# heredoc (not a pipe) for consistency with the loop above; NEW_TOPICS is
+# newline-separated topic names built from trusted TSV-derived text.
+while IFS= read -r topic; do
+  [ -n "$topic" ] || continue
+  [ -n "$(topic_block_survived "$CONTEXT" "$topic")" ] && record_topic "$STATE_FILE" "$topic" "full"
+done <<EOF
+$NEW_TOPICS
+EOF
 
 printf '%s' "$CONTEXT" | jq -Rs '{
   hookSpecificOutput: {

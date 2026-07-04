@@ -92,3 +92,27 @@ _run_hook() {
   assert_success
   assert_output ""
 }
+
+@test "recall-prompt: truncated-away topic is not recorded as surfaced and injects later" {
+  # Second topic large enough that topic1 + topic2 exceed the 9500 budget.
+  {
+    printf -- '---\nscope: "big"\ntriggers:\n  keywords:\n    - "hook"\n---\n\n'
+    printf '## Huge entry\n\n'
+    i=0
+    while [ "$i" -lt 400 ]; do
+      printf 'Line %s of padding content to exceed the injection budget quickly.\n' "$i"
+      i=$((i + 1))
+    done
+    printf '\n---\n'
+  } > "$MEM_DIR/zz-huge.md"
+  bash "$ROOT/scripts/build-triggers-index.sh" "$MEM_DIR"
+
+  _run_hook "please add a new hook that fires on file edits" sessT
+  # One of the two topics must have been truncated away; whichever survived is
+  # recorded, the truncated one is not.
+  run cat "$TMPDIR/hydra-recall-sessT"
+  refute_output --partial "zz-huge.md"
+
+  # A later prompt matching again injects the huge topic's content is not required
+  # (it may truncate again); the invariant under test is only the state file.
+}
