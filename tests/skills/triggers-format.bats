@@ -49,6 +49,8 @@ SEED="$ROOT/skills/seed-memory/SKILL.md"
 @test "learn: instructs populating triggers at write time" {
   run grep -c 'triggers:' "$LEARN"
   assert_success
+  run grep -F 'never invent triggers broader' "$LEARN"
+  assert_success
 }
 
 @test "learn: instructs assigning entry class from capture trigger" {
@@ -77,5 +79,12 @@ SEED="$ROOT/skills/seed-memory/SKILL.md"
   run grep -F 'compile-rules.sh' "$SEED"
   assert_success
   run grep -c 'triggers:' "$SEED"
+  assert_success
+}
+
+@test "seed-memory: seeded entries never get correction/directive class" {
+  run grep -iE 'never.*(correction|directive)|(correction|directive).*never' "$SEED"
+  assert_success
+  run grep -F 'class: pattern' "$SEED"
   assert_success
 }
