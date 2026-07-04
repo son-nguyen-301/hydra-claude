@@ -112,6 +112,20 @@ _lib() { bash -c ". \"$LIB\"; $1"; }
   assert_line "$(printf 'no-newline.md\tpattern\t1')"
 }
 
+@test "match_tool: malformed ERE anywhere yields all-or-nothing, no partial leak" {
+  printf 'good1.md\tcommand\tgit push\tpattern\nbad.md\tcommand\t(((\tpattern\ngood2.md\tcommand\tgit pull\tpattern\n' > "$TSV"
+  run _lib "match_tool \"$TSV\" command 'git push && git pull' /proj 2>/dev/null"
+  assert_success
+  assert_output ""
+}
+
+@test "match_tool: well-formed rows all match when no malformed ERE present" {
+  printf 'good1.md\tcommand\tgit push\tpattern\ngood2.md\tcommand\tgit pull\tpattern\n' > "$TSV"
+  run _lib "match_tool \"$TSV\" command 'git push && git pull' /proj"
+  assert_line "$(printf 'good1.md\tpattern\t1')"
+  assert_line "$(printf 'good2.md\tpattern\t1')"
+}
+
 # ── part 2: extraction, freshness, truncation ────────────────────────────────
 
 _write_qa_topic() {

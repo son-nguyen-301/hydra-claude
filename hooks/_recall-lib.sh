@@ -65,7 +65,10 @@ match_prompt() {
 # kind=path: bash-glob (shell `case`, a builtin — zero forks) against the
 #   project-relative (and raw) path; deduped in the same single trailing awk pass.
 # kind=command: single awk pass, case-SENSITIVE dynamic ERE against the raw value,
-#   passed via ENVIRON. Fails open the same way as match_prompt (see comment there).
+#   passed via ENVIRON. Fails open the same way as match_prompt: matches are
+#   accumulated and printed ONLY from END, so a malformed dynamic ERE aborting
+#   awk mid-file yields zero output rather than a partial set of already-printed
+#   rows (see comment on match_prompt above).
 # Emits: topic<TAB>class<TAB>1
 match_tool() {
   local tsv="$1" match_kind="$2" value="$3" project_root="$4"
@@ -77,8 +80,11 @@ match_tool() {
       $1 == "" { next }
       $2 == "command" {
         if (text ~ $3) {
-          if (!seen[$1]++) printf "%s\t%s\t1\n", $1, $4
+          if (!seen[$1]++) hits[$1] = $4
         }
+      }
+      END {
+        for (f in hits) printf "%s\t%s\t1\n", f, hits[f]
       }
     ' "$tsv" 2>/dev/null
     return 0
@@ -99,7 +105,9 @@ match_tool() {
   return 0
 }
 
-# Order matched topics: class priority, then count desc. stdin/stdout filter.
+# Order matched topics: class priority, then count desc, then topic name (explicit
+# final key so top-3 cutoff determinism is declared, not incidental default
+# whole-line comparison). stdin/stdout filter.
 # In:  topic<TAB>class<TAB>count   Out: topic<TAB>class
 rank_matches() {
   awk -F '\t' '{
@@ -108,7 +116,7 @@ rank_matches() {
     else if ($2 == "directive") p = 1
     else if ($2 == "pattern") p = 2
     printf "%d\t%d\t%s\t%s\n", p, -$3, $1, $2
-  }' | sort -t "$(printf '\t')" -k1,1n -k2,2n | cut -f3,4
+  }' | sort -t "$(printf '\t')" -k1,1n -k2,2n -k3,3 | cut -f3,4
 }
 
 # ── entry extraction ──────────────────────────────────────────────────────────
