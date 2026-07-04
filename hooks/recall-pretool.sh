@@ -36,7 +36,31 @@ MATCHES=$(match_tool "$MEM_DIR/triggers.tsv" "$KIND" "$VALUE" "$PROJECT_ROOT" | 
 
 STATE_FILE=$(recall_state_file "$SESSION_ID")
 
-# >>> deny-once gate inserted here by Task 11 <<<
+# Deny-once gate: a correction/directive topic matching this action that has not
+# yet been surfaced this session blocks the call ONCE, carrying the entries in
+# the reason. State is written BEFORE emitting, so the retry can never re-trigger.
+while IFS=$'\t' read -r topic class; do
+  [ -n "$topic" ] || continue
+  case "$class" in correction|directive) ;; *) continue ;; esac
+  [ -z "$(topic_state "$STATE_FILE" "$topic")" ] || continue
+  GATE_ENTRIES=$(extract_entries_by_class "$MEM_DIR/$topic" "correction|directive")
+  [ -n "$GATE_ENTRIES" ] || continue
+  record_topic "$STATE_FILE" "$topic" "denied"
+  REASON="Automated memory gate — not a user denial and not an error. A saved correction/directive applies to this exact action:
+
+$GATE_ENTRIES
+Retry the same call, applying it (or adjust the call if the saved rule forbids it)."
+  printf '%s' "$REASON" | jq -Rs '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: .
+    }
+  }'
+  exit 0
+done <<EOF
+$MATCHES
+EOF
 
 FULL_BLOCKS=""
 POINTER_LINES=""

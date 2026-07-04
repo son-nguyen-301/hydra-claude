@@ -125,3 +125,67 @@ _run_bash() {
   # A later edit matching again injecting the huge topic's content is not required
   # (it may truncate again); the invariant under test is only the state file.
 }
+
+# ── deny-once gate ────────────────────────────────────────────────────────────
+
+_write_correction_topic() {
+  cat > "$MEM_DIR/corrections.md" <<'EOF'
+---
+scope: "User corrections."
+triggers:
+  commands:
+    - "git push --force"
+---
+
+## Never force-push
+class: correction
+
+User said never force-push shared branches.
+
+**Why:** shared history.
+
+---
+EOF
+  bash "$ROOT/scripts/build-triggers-index.sh" "$MEM_DIR"
+}
+
+@test "deny gate: first matching call is denied with the correction text" {
+  _write_correction_topic
+  _run_bash "git push --force origin main"
+  assert_success
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision'" _ "$output"
+  assert_output "deny"
+}
+
+@test "deny gate: reason says automated gate and includes entry + retry instruction" {
+  _write_correction_topic
+  _run_bash "git push --force origin main"
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecisionReason'" _ "$output"
+  assert_output --partial "Automated memory gate"
+  assert_output --partial "not a user denial"
+  assert_output --partial "## Never force-push"
+  assert_output --partial "Retry the same call"
+}
+
+@test "deny gate: second call in same session is NOT denied" {
+  _write_correction_topic
+  _run_bash "git push --force origin main"
+  _run_bash "git push --force origin main"
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision // \"none\"'" _ "$output"
+  assert_output "none"
+}
+
+@test "deny gate: pattern-class topics never deny" {
+  _run_bash "git push origin main"
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision // \"none\"'" _ "$output"
+  assert_output "none"
+}
+
+@test "deny gate: topic already surfaced by prompt hook is not denied" {
+  _write_correction_topic
+  local sf="$TMPDIR/hydra-recall-sess1"
+  printf 'corrections.md\tfull\n' > "$sf"
+  _run_bash "git push --force origin main"
+  run bash -c "printf '%s' \"\$1\" | jq -r '.hookSpecificOutput.permissionDecision // \"none\"'" _ "$output"
+  assert_output "none"
+}
