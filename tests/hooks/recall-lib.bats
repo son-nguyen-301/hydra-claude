@@ -210,6 +210,12 @@ EOF
   assert_line --partial "[needs-reconfirm"
 }
 
+@test "annotate_qa_entries: processes last line even without trailing newline" {
+  run _lib "printf '## Q\ntype: qa\ncaptured: 2020-01-01\nfreshness: 365d' | annotate_qa_entries /nonexistent"
+  assert_line --partial "freshness: 365d"
+  assert_line --partial "[needs-reconfirm"
+}
+
 @test "truncate: under budget passes through unchanged" {
   run _lib "printf '## A\nbody\n' | truncate_at_entry_boundary 9500 'PTR'"
   refute_line "PTR"

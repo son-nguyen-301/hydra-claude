@@ -181,7 +181,7 @@ annotate_qa_entries() {
   _aq_root="$1"
   _aq_buf=""; _aq_is_qa=0; _aq_captured=""; _aq_freshness=""; _aq_anchor=""
   local line v
-  while IFS= read -r line; do
+  while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       '## '*)
         _aq_flush
