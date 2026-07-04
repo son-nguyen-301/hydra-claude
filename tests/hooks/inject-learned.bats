@@ -456,3 +456,64 @@ _legacy_memory_file_for() {
   run cat "$NEW_FILE"
   assert_output "Legacy from subdir."
 }
+
+# ── recall-era improvements ──────────────────────────────────────────────────
+
+@test "inject-learned: context includes absolute store path" {
+  setup_isolated_home
+  setup_isolated_project
+  local MEMORY_FILE
+  MEMORY_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf -- '- [Hooks](patterns-hooks.md) — hook conventions\n' > "$MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_output --partial "$HYDRA_FAKE_PROJECT/.claude/memory/plugin"
+}
+
+@test "inject-learned: store without MEMORY.md warns into context" {
+  setup_isolated_home
+  setup_isolated_project
+  mkdir -p "$HYDRA_FAKE_PROJECT/.claude/memory/plugin"
+  printf -- '---\nscope: "x"\n---\n\n## E\nB\n' > "$HYDRA_FAKE_PROJECT/.claude/memory/plugin/orphan.md"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_output --partial "MEMORY.md index is missing"
+}
+
+@test "inject-learned: stale triggers.tsv noted in context" {
+  setup_isolated_home
+  setup_isolated_project
+  local MEMORY_FILE
+  MEMORY_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf -- '- [Hooks](patterns-hooks.md) — hooks\n' > "$MEMORY_FILE"
+  # topic file exists, TSV absent → stale
+  printf -- '---\nscope: "x"\n---\n\n## E\nB\n' > "$(dirname "$MEMORY_FILE")/patterns-hooks.md"
+
+  local payload
+  payload=$(printf '{"cwd":"%s"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_output --partial "triggers.tsv"
+}
+
+# ── SubagentStart event wiring ────────────────────────────────────────────────
+
+@test "inject-learned: hook_event_name SubagentStart is passed through" {
+  setup_isolated_home
+  setup_isolated_project
+  local MEMORY_FILE
+  MEMORY_FILE=$(_memory_file_for "$HYDRA_FAKE_PROJECT")
+  mkdir -p "$(dirname "$MEMORY_FILE")"
+  printf 'Always use immutable patterns.\nPrefer early returns.\n' > "$MEMORY_FILE"
+
+  local payload
+  payload=$(printf '{"cwd":"%s","hook_event_name":"SubagentStart"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" | jq -r ".hookSpecificOutput.hookEventName"' _ "$payload" "$HYDRA_FAKE_HOME" "$INJECT_LEARNED_HOOK"
+  assert_success
+  assert_output "SubagentStart"
+}

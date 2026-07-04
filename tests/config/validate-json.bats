@@ -76,6 +76,12 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_success
 }
 
+@test "plugin.json: hooks.SubagentStart registered (recall)" {
+  run jq -r '.hooks.SubagentStart[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output --partial "inject-learned.sh"
+}
+
 # ── marketplace.json tests ────────────────────────────────────────────────────
 
 @test "marketplace.json: is valid JSON" {
@@ -126,4 +132,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
 @test "settings.json: has hooks.Stop" {
   run jq -e '.hooks.Stop' "$SETTINGS_JSON"
   assert_success
+}
+
+@test "settings.json: hooks.SubagentStart registered (recall)" {
+  run jq -r '.hooks.SubagentStart[0].hooks[0].command // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output --partial "inject-learned.sh"
 }

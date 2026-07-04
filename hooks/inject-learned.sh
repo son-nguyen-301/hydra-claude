@@ -14,6 +14,7 @@ PLUGIN_RULES_FILE="$HOOK_DIR/../CLAUDE.md"
 
 # Source the shared lib for resolve_project_root
 . "$HOOK_DIR/_lib.sh"
+. "$HOOK_DIR/_recall-lib.sh"
 
 PROJECT_ROOT=$(resolve_project_root "$PROJECT_DIR")
 PLUGIN_MEMORY_FILE="$PROJECT_ROOT/.claude/memory/plugin/MEMORY.md"
@@ -49,12 +50,22 @@ if [ -n "$PROJECT_DIR" ] && [ -z "$PLUGIN_RULES" ] && [ -z "$MEMORY_CONTENT" ]; 
   echo "WARNING [inject-learned]: No plugin rules or memory patterns found for project: $PROJECT_DIR" >&2
 fi
 
-# Exit 0 if both are empty
-if [ -z "$PLUGIN_RULES" ] && [ -z "$MEMORY_CONTENT" ]; then
-  exit 0
+MEM_DIR="$PROJECT_ROOT/.claude/memory/plugin"
+MEMORY_FRAMING="Memory index — repo-specific patterns (MUST read relevant topic files before making decisions in that domain). Store (absolute): $MEM_DIR/"
+
+MEMORY_NOTES=""
+if [ -d "$MEM_DIR" ] && [ ! -f "$PLUGIN_MEMORY_FILE" ]; then
+  MEMORY_NOTES="WARNING: memory store exists but its MEMORY.md index is missing — run /hydra-claude:learn to rebuild it."
+fi
+if [ -f "$PLUGIN_MEMORY_FILE" ] && tsv_is_stale "$MEM_DIR"; then
+  MEMORY_NOTES="$MEMORY_NOTES
+NOTE: triggers.tsv is missing or stale — decision-point recall is degraded until the learn skill next writes (it regenerates the index)."
 fi
 
-MEMORY_FRAMING="Memory index — repo-specific patterns (MUST read relevant topic files before making decisions in that domain):"
+# Exit 0 if rules, memory, and notes are all empty
+if [ -z "$PLUGIN_RULES" ] && [ -z "$MEMORY_CONTENT" ] && [ -z "$MEMORY_NOTES" ]; then
+  exit 0
+fi
 
 # Build additionalContext based on what we have
 if [ -n "$PLUGIN_RULES" ] && [ -n "$MEMORY_CONTENT" ]; then
@@ -77,9 +88,18 @@ else
 $MEMORY_CONTENT"
 fi
 
-printf '%s' "$ADDITIONAL_CONTEXT" | jq -Rs '{
+if [ -n "$MEMORY_NOTES" ]; then
+  ADDITIONAL_CONTEXT="$ADDITIONAL_CONTEXT
+
+$MEMORY_NOTES"
+fi
+
+HOOK_EVENT=$(echo "$PAYLOAD" | jq -r '.hook_event_name // "SessionStart"' 2>/dev/null)
+[ -n "$HOOK_EVENT" ] || HOOK_EVENT="SessionStart"
+
+printf '%s' "$ADDITIONAL_CONTEXT" | jq -Rs --arg ev "$HOOK_EVENT" '{
   hookSpecificOutput: {
-    hookEventName: "SessionStart",
+    hookEventName: $ev,
     additionalContext: .
   }
 }'
