@@ -42,9 +42,18 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_failure
 }
 
-@test "plugin.json: hooks.UserPromptSubmit is absent (memory-only)" {
-  run jq -e '.hooks.UserPromptSubmit' "$PLUGIN_JSON"
-  assert_failure
+@test "plugin.json: hooks.UserPromptSubmit registered (recall)" {
+  run jq -r '.hooks.UserPromptSubmit[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output --partial "recall-prompt.sh"
+}
+
+@test "plugin.json: hooks.PreToolUse registered with tool matcher" {
+  run jq -r '.hooks.PreToolUse[0].matcher // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output "Edit|Write|MultiEdit|Bash"
+  run jq -r '.hooks.PreToolUse[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_output --partial "recall-pretool.sh"
 }
 
 @test "plugin.json: hooks.PostToolUse is absent" {
@@ -92,9 +101,16 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_failure
 }
 
-@test "settings.json: hooks.UserPromptSubmit is absent (memory-only)" {
-  run jq -e '.hooks.UserPromptSubmit' "$SETTINGS_JSON"
-  assert_failure
+@test "settings.json: hooks.UserPromptSubmit registered (recall)" {
+  run jq -r '.hooks.UserPromptSubmit[0].hooks[0].command // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output --partial "recall-prompt.sh"
+}
+
+@test "settings.json: hooks.PreToolUse registered with tool matcher" {
+  run jq -r '.hooks.PreToolUse[0].matcher // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output "Edit|Write|MultiEdit|Bash"
 }
 
 @test "settings.json: has hooks.SessionStart" {
