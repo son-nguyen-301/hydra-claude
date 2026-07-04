@@ -68,3 +68,37 @@ teardown() {
   run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload_b" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
   assert_failure 2
 }
+
+@test "session-end-learn: flag stores the token count at fire time" {
+  local payload='{"transcript_path":"/tmp/test-session-armx.jsonl","context_window":{"input_tokens":6000}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_failure 2
+  run cat "/tmp/hydra-claude-learn-done-test-session-armx.jsonl.flag"
+  assert_output "6000"
+}
+
+@test "session-end-learn: small delta after fire does not re-fire" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-army.jsonl.flag"
+  printf '6000' > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-army.jsonl","context_window":{"input_tokens":8000}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_success
+}
+
+@test "session-end-learn: >=5k delta re-fires and updates the flag" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-armz.jsonl.flag"
+  printf '6000' > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-armz.jsonl","context_window":{"input_tokens":11500}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_failure 2
+  run cat "$flag"
+  assert_output "11500"
+}
+
+@test "session-end-learn: legacy empty flag treated as zero (fires when above threshold)" {
+  local flag="/tmp/hydra-claude-learn-done-test-session-arml.jsonl.flag"
+  : > "$flag"
+  local payload='{"transcript_path":"/tmp/test-session-arml.jsonl","context_window":{"input_tokens":6000}}'
+  run bash -c 'echo "$1" | HOME="$2" bash "$3" 2>/dev/null' _ "$payload" "$HYDRA_FAKE_HOME" "$SESSION_END_LEARN_HOOK"
+  assert_failure 2
+}
