@@ -93,3 +93,21 @@ _lib() { bash -c ". \"$LIB\"; $1"; }
   run _lib "printf 'a.md\tpattern\t1\nb.md\tpattern\t4\n' | rank_matches"
   assert_line --index 0 "$(printf 'b.md\tpattern')"
 }
+
+@test "match_prompt: matches last TSV row even without trailing newline" {
+  printf 'no-newline.md\tkeyword\tzebra\tpattern' >> "$TSV"
+  run _lib "match_prompt \"$TSV\" 'a zebra walked by'"
+  assert_line "$(printf 'no-newline.md\tpattern\t1')"
+}
+
+@test "match_prompt: preserves topic filenames containing spaces" {
+  printf 'weird topic name.md\tkeyword\tqux\tpattern\n' >> "$TSV"
+  run _lib "match_prompt \"$TSV\" 'the qux keyword appears'"
+  assert_line "$(printf 'weird topic name.md\tpattern\t1')"
+}
+
+@test "match_tool: matches last TSV row even without trailing newline" {
+  printf 'no-newline.md\tcommand\tzebra\tpattern' >> "$TSV"
+  run _lib "match_tool \"$TSV\" command 'run zebra now' /proj"
+  assert_line "$(printf 'no-newline.md\tpattern\t1')"
+}

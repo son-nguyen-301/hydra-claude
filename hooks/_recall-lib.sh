@@ -37,7 +37,7 @@ match_prompt() {
   local tsv="$1" prompt_lc="$2"
   [ -f "$tsv" ] || return 0
   local file kind pat class
-  while IFS=$'\t' read -r file kind pat class; do
+  while IFS=$'\t' read -r file kind pat class || [ -n "$file" ]; do
     [ -n "$file" ] || continue
     case "$kind" in
       keyword)
@@ -47,7 +47,13 @@ match_prompt() {
         printf '%s' "$prompt_lc" | grep -qiE -- "$pat" && printf '%s\t%s\n' "$file" "$class"
         ;;
     esac
-  done < "$tsv" | sort | uniq -c | awk '{ print $2 "\t" $3 "\t" $1 }'
+  done < "$tsv" | sort | uniq -c | awk '{
+    count = $1
+    line = $0
+    sub(/^[[:space:]]*[0-9]+[[:space:]]/, "", line)
+    n = split(line, parts, "\t")
+    if (n >= 2) printf "%s\t%s\t%s\n", parts[1], parts[2], count
+  }'
 }
 
 # Match one tool value against rows of one kind.
@@ -62,7 +68,7 @@ match_tool() {
     "$project_root"/*) rel="${value#"$project_root"/}" ;;
   esac
   local file kind pat class
-  while IFS=$'\t' read -r file kind pat class; do
+  while IFS=$'\t' read -r file kind pat class || [ -n "$file" ]; do
     [ "$kind" = "$match_kind" ] || continue
     if [ "$kind" = "path" ]; then
       case "$rel" in
