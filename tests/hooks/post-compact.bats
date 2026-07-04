@@ -134,3 +134,29 @@ _memory_file_for() {
   assert_output --partial "PLUGIN RULES"
   assert_output --partial "Plugin memory always injected."
 }
+
+# ── recall replay ─────────────────────────────────────────────────────────────
+
+@test "post-compact: replays recalled topics from session state" {
+  setup_isolated_home
+  setup_isolated_project
+  export TMPDIR="$BATS_TEST_TMPDIR"
+  printf 'patterns-hooks.md\tfull\ncorrections.md\tdenied\n' > "$TMPDIR/hydra-recall-sessX"
+
+  local payload
+  payload=$(printf '{"cwd":"%s","session_id":"sessX"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" TMPDIR="$3" bash "$4" | jq -r ".hookSpecificOutput.additionalContext"' _ "$payload" "$HYDRA_FAKE_HOME" "$TMPDIR" "$POST_COMPACT_HOOK"
+  assert_output --partial "Topics already recalled this session"
+  assert_output --partial "patterns-hooks.md"
+  assert_output --partial "corrections.md"
+}
+
+@test "post-compact: no session state — no replay section" {
+  setup_isolated_home
+  setup_isolated_project
+  export TMPDIR="$BATS_TEST_TMPDIR"
+  local payload
+  payload=$(printf '{"cwd":"%s","session_id":"sessY"}' "$HYDRA_FAKE_PROJECT")
+  run bash -c 'echo "$1" | HOME="$2" TMPDIR="$3" bash "$4" | jq -r ".hookSpecificOutput.additionalContext // \"\""' _ "$payload" "$HYDRA_FAKE_HOME" "$TMPDIR" "$POST_COMPACT_HOOK"
+  refute_output --partial "Topics already recalled"
+}
