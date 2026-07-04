@@ -92,7 +92,7 @@ triggers:
 ```
 
 - `paths` — bash-glob patterns matched against Edit/Write file paths (relative to project root; `*` crosses `/`) and used verbatim as `paths:` in compiled rules.
-- `commands` — POSIX EREs matched against Bash tool commands. Write character ranges as [A-Za-z]-style classes, not POSIX names like [[:upper:]] — command patterns are matched caselessly by lowercasing both sides, which POSIX class names bypass.
+- `commands` — POSIX EREs matched against Bash tool commands. Write character ranges as [A-Za-z]-style classes, not POSIX names like [[:upper:]] — on the prompt-matching path, command patterns are matched caselessly by lowercasing both sides, which POSIX class names bypass (tool-command matching is case-sensitive).
 - `keywords` — lowercase substrings matched against the user prompt.
 
 All three lists are optional. Files without `triggers:` are simply not matched at decision time (voluntary recall still applies).
