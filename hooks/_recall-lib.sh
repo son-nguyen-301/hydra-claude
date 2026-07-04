@@ -8,7 +8,7 @@ recall_state_file() {
   printf '%s/hydra-recall-%s' "${TMPDIR:-/tmp}" "$1"
 }
 
-# Echoes the recorded state (full|pointer|denied) for a topic, or nothing.
+# Echoes the recorded state (full|denied) for a topic, or nothing.
 topic_state() {
   local state_file="$1" topic="$2"
   [ -f "$state_file" ] || return 0
@@ -32,55 +32,82 @@ tsv_is_stale() {
 # ── matching ──────────────────────────────────────────────────────────────────
 
 # Match keyword (fixed-string) and command (ERE) rows against a lowercased prompt.
+# Single awk pass — O(1) forks regardless of TSV row count (was one grep fork per
+# row). The prompt is passed via ENVIRON (not -v, which mangles backslashes) so its
+# content survives byte-exactly. `path` rows are ignored, as before.
 # Emits: topic<TAB>class<TAB>count
+# Fails open: a malformed dynamic ERE on any `command` row aborts the awk process
+# (BWK awk has no per-row recovery); output is buffered until END, so an abort
+# yields no output at all rather than partial/corrupt lines. stderr is discarded.
 match_prompt() {
   local tsv="$1" prompt_lc="$2"
   [ -f "$tsv" ] || return 0
-  local file kind pat class
-  while IFS=$'\t' read -r file kind pat class || [ -n "$file" ]; do
-    [ -n "$file" ] || continue
-    case "$kind" in
-      keyword)
-        printf '%s' "$prompt_lc" | grep -qiF -- "$pat" && printf '%s\t%s\n' "$file" "$class"
-        ;;
-      command)
-        printf '%s' "$prompt_lc" | grep -qiE -- "$pat" && printf '%s\t%s\n' "$file" "$class"
-        ;;
-    esac
-  done < "$tsv" | sort | uniq -c | awk '{
-    count = $1
-    line = $0
-    sub(/^[[:space:]]*[0-9]+[[:space:]]/, "", line)
-    n = split(line, parts, "\t")
-    if (n >= 2) printf "%s\t%s\t%s\n", parts[1], parts[2], count
-  }'
+  HYDRA_MATCH_TEXT="$prompt_lc" awk -F '\t' '
+    BEGIN { lprompt = tolower(ENVIRON["HYDRA_MATCH_TEXT"]) }
+    $1 == "" { next }
+    $2 == "keyword" {
+      if (index(lprompt, tolower($3)) > 0) { count[$1]++; cls[$1] = $4 }
+      next
+    }
+    $2 == "command" {
+      # Case-insensitive ERE: lowercasing both sides is equivalent to grep -iE
+      # for the caseless patterns capture-side authors write.
+      if (lprompt ~ tolower($3)) { count[$1]++; cls[$1] = $4 }
+    }
+    END {
+      for (f in count) printf "%s\t%s\t%d\n", f, cls[f], count[f]
+    }
+  ' "$tsv" 2>/dev/null
+  return 0
 }
 
 # Match one tool value against rows of one kind.
-# kind=path: bash-glob against the project-relative (and raw) path.
-# kind=command: ERE against the raw value.
+# kind=path: bash-glob (shell `case`, a builtin — zero forks) against the
+#   project-relative (and raw) path; deduped in the same single trailing awk pass.
+# kind=command: single awk pass, case-SENSITIVE dynamic ERE against the raw value,
+#   passed via ENVIRON. Fails open the same way as match_prompt: matches are
+#   accumulated and printed ONLY from END, so a malformed dynamic ERE aborting
+#   awk mid-file yields zero output rather than a partial set of already-printed
+#   rows (see comment on match_prompt above).
 # Emits: topic<TAB>class<TAB>1
 match_tool() {
   local tsv="$1" match_kind="$2" value="$3" project_root="$4"
   [ -f "$tsv" ] || return 0
+
+  if [ "$match_kind" = "command" ]; then
+    HYDRA_MATCH_TEXT="$value" awk -F '\t' '
+      BEGIN { text = ENVIRON["HYDRA_MATCH_TEXT"] }
+      $1 == "" { next }
+      $2 == "command" {
+        if (text ~ $3) {
+          if (!seen[$1]++) hits[$1] = $4
+        }
+      }
+      END {
+        for (f in hits) printf "%s\t%s\t1\n", f, hits[f]
+      }
+    ' "$tsv" 2>/dev/null
+    return 0
+  fi
+
   local rel="$value"
   case "$value" in
     "$project_root"/*) rel="${value#"$project_root"/}" ;;
   esac
   local file kind pat class
-  while IFS=$'\t' read -r file kind pat class || [ -n "$file" ]; do
-    [ "$kind" = "$match_kind" ] || continue
-    if [ "$kind" = "path" ]; then
+  { while IFS=$'\t' read -r file kind pat class || [ -n "$file" ]; do
+      [ "$kind" = "path" ] || continue
       case "$rel" in
         $pat) printf '%s\t%s\n' "$file" "$class" ;;
       esac
-    else
-      printf '%s' "$value" | grep -qE -- "$pat" && printf '%s\t%s\n' "$file" "$class"
-    fi
-  done < "$tsv" | sort -u | awk -F '\t' '{ print $1 "\t" $2 "\t1" }'
+    done < "$tsv"
+  } | awk -F '\t' '!seen[$1]++ { printf "%s\t%s\t1\n", $1, $2 }'
+  return 0
 }
 
-# Order matched topics: class priority, then count desc. stdin/stdout filter.
+# Order matched topics: class priority, then count desc, then topic name (explicit
+# final key so top-3 cutoff determinism is declared, not incidental default
+# whole-line comparison). stdin/stdout filter.
 # In:  topic<TAB>class<TAB>count   Out: topic<TAB>class
 rank_matches() {
   awk -F '\t' '{
@@ -89,7 +116,7 @@ rank_matches() {
     else if ($2 == "directive") p = 1
     else if ($2 == "pattern") p = 2
     printf "%d\t%d\t%s\t%s\n", p, -$3, $1, $2
-  }' | sort -t "$(printf '\t')" -k1,1n -k2,2n | cut -f3,4
+  }' | sort -t "$(printf '\t')" -k1,1n -k2,2n -k3,3 | cut -f3,4
 }
 
 # ── entry extraction ──────────────────────────────────────────────────────────
@@ -237,4 +264,66 @@ truncate_at_entry_boundary() {
       if (truncated && ptr != "") print ptr
     }
   '
+}
+
+# ── recall assembly ───────────────────────────────────────────────────────────
+
+# assemble_and_emit_recall <matches> <mem_dir> <state_file> <project_root> <framing_text> <event_name>
+# Assembles full/pointer blocks from ranked matches (topic<TAB>class lines), truncates
+# at entry boundaries (9500), records surviving topics, and emits the additionalContext
+# JSON for <event_name>. Emits nothing and returns 0 when there is nothing to inject.
+assemble_and_emit_recall() {
+  local matches="$1" mem_dir="$2" state_file="$3" project_root="$4" framing="$5" event_name="$6"
+  local FULL_BLOCKS="" POINTER_LINES="" NEW_TOPICS=""
+  # Recording of "full" topics is deferred until after truncation below, so a topic
+  # whose block gets truncated away isn't marked as surfaced (it would otherwise be
+  # silently lost for the rest of the session — see CONTEXT truncation below).
+  # heredoc (not a pipe) so loop-body variable mutations (FULL_BLOCKS, POINTER_LINES,
+  # NEW_TOPICS) persist after the loop; matches is trusted TSV-derived text.
+  local topic class
+  while IFS=$'\t' read -r topic class; do
+    [ -n "$topic" ] || continue
+    if [ -n "$(topic_state "$state_file" "$topic")" ]; then
+      POINTER_LINES="$POINTER_LINES- Already surfaced this session: $mem_dir/$topic"$'\n'
+    else
+      local entries
+      entries=$(extract_entries "$mem_dir/$topic" | annotate_qa_entries "$project_root")
+      [ -n "$entries" ] || continue
+      FULL_BLOCKS="$FULL_BLOCKS### From $topic"$'\n'"$entries"$'\n'
+      NEW_TOPICS="$NEW_TOPICS$topic"$'\n'
+    fi
+  done <<EOF
+$matches
+EOF
+
+  { [ -n "$FULL_BLOCKS" ] || [ -n "$POINTER_LINES" ]; } || return 0
+
+  local context
+  context="$framing
+
+$FULL_BLOCKS$POINTER_LINES"
+  context=$(printf '%s' "$context" | truncate_at_entry_boundary 9500 \
+    "…truncated — read the remaining topic files in $mem_dir yourself.")
+
+  # Only record a topic as "full" once we know its block survived truncation above.
+  # Topics dropped by truncate_at_entry_boundary are NOT recorded, so they remain
+  # eligible to inject in full on a later, smaller match. A plain substring
+  # check for "### From $topic" is not sufficient — see topic_block_survived.
+  # heredoc (not a pipe) for consistency with the loop above; NEW_TOPICS is
+  # newline-separated topic names built from trusted TSV-derived text.
+  local t
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    [ -n "$(topic_block_survived "$context" "$t")" ] && record_topic "$state_file" "$t" "full" 2>/dev/null
+  done <<EOF
+$NEW_TOPICS
+EOF
+
+  printf '%s' "$context" | jq -Rs --arg event "$event_name" '{
+    hookSpecificOutput: {
+      hookEventName: $event,
+      additionalContext: .
+    }
+  }'
+  return 0
 }

@@ -105,3 +105,26 @@ setup() {
   run grep -c 'patterns-hooks.md' "$MEM_DIR/triggers.tsv"
   assert_output "3"
 }
+
+@test "builder: drops malformed command ERE rows with a warning" {
+  cat > "$MEM_DIR/badre.md" <<'EOF'
+---
+scope: "x"
+triggers:
+  commands:
+    - "((("
+    - "git push"
+---
+
+## E
+
+B.
+
+---
+EOF
+  run bash -c 'bash "$1" "$2" 2>&1' _ "$BUILDER" "$MEM_DIR"
+  assert_success
+  assert_output --partial "malformed command pattern"
+  run grep -c $'badre.md\tcommand' "$MEM_DIR/triggers.tsv"
+  assert_output "1"
+}
