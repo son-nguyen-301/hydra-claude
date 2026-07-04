@@ -42,3 +42,40 @@ CORE="$ROOT/skills/_shared/workspace-core.md"
   run grep -F 'triggers.tsv' "$CORE"
   assert_success
 }
+
+LEARN="$ROOT/skills/learn/SKILL.md"
+SEED="$ROOT/skills/seed-memory/SKILL.md"
+
+@test "learn: instructs populating triggers at write time" {
+  run grep -c 'triggers:' "$LEARN"
+  assert_success
+}
+
+@test "learn: instructs assigning entry class from capture trigger" {
+  run grep -E 'class:.*correction' "$LEARN"
+  assert_success
+}
+
+@test "learn: instructs running the index builder after writes" {
+  run grep -F 'build-triggers-index.sh' "$LEARN"
+  assert_success
+}
+
+@test "learn: instructs running the rules compiler after writes" {
+  run grep -F 'compile-rules.sh' "$LEARN"
+  assert_success
+}
+
+@test "learn: extends legacy upgrade to backfill triggers" {
+  run grep -iE 'legacy.*triggers|triggers.*legacy' "$LEARN"
+  assert_success
+}
+
+@test "seed-memory: instructs triggers population and both scripts" {
+  run grep -F 'build-triggers-index.sh' "$SEED"
+  assert_success
+  run grep -F 'compile-rules.sh' "$SEED"
+  assert_success
+  run grep -c 'triggers:' "$SEED"
+  assert_success
+}

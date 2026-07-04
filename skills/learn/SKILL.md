@@ -7,9 +7,9 @@ description: "Capture repo-specific patterns, corrections, and conventions from 
 
 **Project root resolution.** All memory paths in this skill are relative to the project root. If you are inside a **linked git worktree** (detectable when `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`), the project root is the **main worktree** — the first entry of `git worktree list --porcelain` — so memory is written to the main repo rather than the worktree. Otherwise, the project root is the nearest ancestor of the current working directory that contains a `.git/` directory (preferred) or a `.claude/` directory (fallback); use `pwd` and walk up until you find one, and if you reach `/` without finding either marker, use `pwd`. All memory lives at `<project-root>/.claude/memory/plugin/`.
 
-**Focused mode (mid-session capture).** If the user prompt invoking this skill contains a `PATTERN:` line and a `WHY:` line, you were invoked in focused mode. Skip Steps 1-2 entirely — do not scan the conversation. Treat the provided PATTERN as the single pattern title to save, and WHY as its rationale. Jump directly to Step 3 (Read memory index) and follow Steps 3-9 normally for that one pattern.
+**Focused mode (mid-session capture).** If the user prompt invoking this skill contains a `PATTERN:` line and a `WHY:` line, you were invoked in focused mode. Skip Steps 1-2 entirely — do not scan the conversation. Treat the provided PATTERN as the single pattern title to save, and WHY as its rationale. Jump directly to Step 3 (Read memory index) and follow Steps 3-10 normally for that one pattern.
 
-**Q&A focused mode.** If the invoking prompt contains a `QA:` block (a `QA:` line with `QUESTION:`, `ANSWER:`, `TYPE:`, `ANCHOR:`, and `WHY:` fields), you are in Q&A focused mode, capturing a reusable clarifying answer. (`TYPE` — one of `preference`/`fact`/`decision` — determines the entry's `freshness:` window.) Skip Steps 1-2. Before writing, apply the **durability gate**: only capture answers reusable beyond the current task. Drop anything scoped to a single PR/branch/ticket or phrased "this time"/"for now"; when unsure, do not capture and say so. If it passes the gate, use the normalized `QUESTION` as the entry heading and follow Steps 3-9, but write a **`type: qa` entry** (see the Q&A capture rules in Step 6) instead of a plain pattern.
+**Q&A focused mode.** If the invoking prompt contains a `QA:` block (a `QA:` line with `QUESTION:`, `ANSWER:`, `TYPE:`, `ANCHOR:`, and `WHY:` fields), you are in Q&A focused mode, capturing a reusable clarifying answer. (`TYPE` — one of `preference`/`fact`/`decision` — determines the entry's `freshness:` window.) Skip Steps 1-2. Before writing, apply the **durability gate**: only capture answers reusable beyond the current task. Drop anything scoped to a single PR/branch/ticket or phrased "this time"/"for now"; when unsure, do not capture and say so. If it passes the gate, use the normalized `QUESTION` as the entry heading and follow Steps 3-10, but write a **`type: qa` entry** (see the Q&A capture rules in Step 6) instead of a plain pattern.
 
 If no `PATTERN:`/`WHY:` and no `QA:` block is present, use full-scan mode: start at Step 1 and scan the conversation.
 
@@ -69,6 +69,7 @@ When no existing category fits a pattern:
    - `scope`: 1-2 sentences describing what belongs. Write it broadly enough to capture related future patterns, but specific enough to be useful for routing.
    - `not`: 1 sentence describing what does NOT belong. Think about adjacent categories that might cause confusion.
    - `anchors`: use the current pattern's title as the first anchor. Leave room for 1-2 more.
+   - `triggers`: populate the machine-matchable trigger block (see `workspace-templates.md` → "Trigger metadata"). Derive from the pattern itself: `paths` = globs for the files the pattern governs (from anchor files or paths discussed in the conversation), `commands` = EREs for shell commands it constrains, `keywords` = 2-4 lowercase topic words a future prompt about this domain would contain. Omit lists that don't apply; never invent triggers broader than the pattern's real scope (a false trigger injects noise into every matching action).
 3. Add the new file to `<project-root>/.claude/memory/plugin/MEMORY.md` index: `- [Category name](filename.md) — {scope summary}`
 
 **Step 6 — Write pattern to topic file**
@@ -80,6 +81,10 @@ Apply dedup and conflict resolution:
 - **Duplicate** (same heading, semantically equivalent): skip or merge `**Why:**` lines.
 - **Conflict** (same heading, contradictory content): overwrite in-place with `<!-- Replaced: ... -->` comment. *(For `type: qa` entries, do NOT use this in-place overwrite — follow the Q&A contradiction-supersede rules below instead.)*
 - **New** (no heading match): append to file.
+
+**Entry class.** Directly under the entry's `## ` heading, write a `class:` line derived from what fired the capture: user correction → `class: correction`; "always/never/from now on" directive → `class: directive`; validated approach or observed convention → `class: pattern` (may be omitted — it is the default); Q&A preference → `class: preference`. `correction` and `directive` entries are enforced by the PreToolUse deny-once gate, so only use them when the user genuinely corrected or directed.
+
+**Trigger maintenance on existing files.** When writing to a file that has a `triggers:` block, extend it if the new entry introduces new paths/commands/keywords. When writing to a file WITHOUT a `triggers:` block (legacy), backfill one as part of the same transparent in-place upgrade that adds missing frontmatter: derive triggers from ALL existing entries in the file, not just the new one.
 
 After writing, check if the new entry is more representative of the category than existing anchors. If so, update the anchors list in the YAML frontmatter (keep max 3 anchors).
 
@@ -111,3 +116,13 @@ If the number of categories in MEMORY.md exceeds 20, warn the user and suggest m
 Each topic file max ~100 lines. MEMORY.md max 200 lines. Warn if exceeded.
 
 Confirm that the relevant `<project-root>/.claude/memory/plugin/` topic files have been updated and summarize what was added to each file.
+
+**Step 10 — Regenerate machine artifacts**
+After all topic-file writes are done, regenerate the trigger index and compiled rules by running both scripts (they live in the plugin's `scripts/` directory — resolve it relative to this skill's base directory, i.e. `<skill-base-dir>/../../scripts/`):
+
+```bash
+bash <plugin-root>/scripts/build-triggers-index.sh <project-root>/.claude/memory/plugin
+bash <plugin-root>/scripts/compile-rules.sh <project-root>/.claude/memory/plugin <project-root>/.claude/rules
+```
+
+Run them in that order (the compiler assumes topic files are final). Both are idempotent and always safe to run. Skipping this step leaves decision-time recall degraded (the hooks no-op on a stale index), so it is NOT optional.

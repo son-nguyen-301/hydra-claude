@@ -105,6 +105,10 @@ WHY: <rationale from the candidate>
 
 The learn skill handles category routing (Step 4), new-category creation (Step 5), topic-file writing with dedup (Step 6), and MEMORY.md index updates (Step 7). Do NOT write topic files directly from this skill — always delegate to learn.
 
+**Triggers.** This skill never writes `triggers:` frontmatter itself. When learn creates a new category for a finding (its Step 5) or extends an existing one (its Step 6 trigger maintenance), it populates/extends the `triggers:` block using the same derivation rules as full-scan captures (see `workspace-templates.md` → "Trigger metadata"): `paths`/`commands` from the concrete files and commands the scan found, `keywords` from the domain. Give learn enough signal to do this well — phrase each `PATTERN`/`WHY` around the actual evidence (config filenames, command lines, tool names) rather than a vague paraphrase.
+
+**Entry class for seeded findings.** Seeded entries default to `class: pattern` — learn's Step 6 default for an observed/validated convention, which fits since seeding captures conventions inferred from static scanning, not a live user correction or directive. While drafting candidates in Phase 2, flag any finding that reflects a convention the team mechanically enforces (a lint rule set to error, a required CI check, a pre-commit hook that fails the build) rather than one merely observed. Carry that determination forward: when invoking learn for a flagged finding, its Step 6 entry-class assignment for that entry should be `class: directive` instead of the default `class: pattern` — the enforcement evidence was gathered in this same session, so it is available at write time without adding any new field to the PATTERN/WHY invocation contract.
+
 Invoke learn ONE finding at a time (one invocation per pattern). Do not batch multiple PATTERN/WHY blocks into a single learn invocation.
 
 After all invocations complete, print a one-line summary:
@@ -112,3 +116,16 @@ After all invocations complete, print a one-line summary:
 ```
 Wrote <N> entries across <M> categories. See <project-root>/.claude/memory/plugin/MEMORY.md.
 ```
+
+---
+
+## Phase 5 — Regenerate machine artifacts
+
+After all Phase 4 invocations are done, regenerate the trigger index and compiled rules by running both scripts (they live in the plugin's `scripts/` directory — resolve it relative to this skill's base directory, i.e. `<skill-base-dir>/../../scripts/`):
+
+```bash
+bash <plugin-root>/scripts/build-triggers-index.sh <project-root>/.claude/memory/plugin
+bash <plugin-root>/scripts/compile-rules.sh <project-root>/.claude/memory/plugin <project-root>/.claude/rules
+```
+
+Run them in that order (the compiler assumes topic files are final). Both are idempotent and always safe to run. Skipping this step leaves decision-time recall degraded (the hooks no-op on a stale index), so it is NOT optional.
