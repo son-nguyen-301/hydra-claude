@@ -93,6 +93,19 @@ _run_hook() {
   assert_output ""
 }
 
+@test "recall-prompt: malformed dynamic ERE in triggers.tsv fails open (no crash, no output pollution)" {
+  # An unbalanced ERE ("(((") on a `command` row makes the single-pass awk
+  # matcher abort mid-run (BWK awk has no per-row recovery). Since matches are
+  # only printed from the awk END block, the abort yields no output at all —
+  # the hook must still exit 0 with nothing on stdout, never raw awk error text.
+  printf 'patterns-hooks.md\tcommand\t(((\tpattern\n' >> "$MEM_DIR/triggers.tsv"
+  printf 'evil.md\tcommand\t$(touch /tmp/HYDRA_PWNED_TEST)\tpattern\n' >> "$MEM_DIR/triggers.tsv"
+  _run_hook "please add a new hook that fires on file edits; \$(touch /tmp/HYDRA_PWNED_TEST)"
+  assert_success
+  assert_output ""
+  [ ! -e /tmp/HYDRA_PWNED_TEST ]
+}
+
 @test "recall-prompt: truncated-away topic is not recorded as surfaced and injects later" {
   # Second topic large enough that topic1 + topic2 exceed the 9500 budget.
   {
@@ -118,11 +131,13 @@ _run_hook() {
 }
 
 @test "recall-prompt: 10 invocations complete within 5 seconds (hang guard)" {
-  local payload start elapsed i
-  payload=$(jq -n --arg c "$HYDRA_FAKE_PROJECT" \
-    '{prompt: "please add a new hook that fires on file edits", session_id: "perf", cwd: $c}')
+  local start elapsed i payload
   start=$SECONDS
   for i in 1 2 3 4 5 6 7 8 9 10; do
+    # Fresh session id per iteration so every run takes the full assembly path
+    # (no "already surfaced" short-circuit), exercising the expensive path 10x.
+    payload=$(jq -n --arg c "$HYDRA_FAKE_PROJECT" --arg s "perf$i" \
+      '{prompt: "please add a new hook that fires on file edits", session_id: $s, cwd: $c}')
     echo "$payload" | TMPDIR="$TMPDIR" bash "$HOOK" > /dev/null
   done
   elapsed=$(( SECONDS - start ))
