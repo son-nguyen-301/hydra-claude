@@ -51,17 +51,26 @@ cp ~/hydra-claude/' settings.json' .claude/settings.json
 
 ## How it works
 
-Three Claude Code hooks plus one skill:
+Six Claude Code hooks plus one skill:
 
 | Hook | Script | Purpose |
 |------|--------|---------|
 | `SessionStart` | `hooks/inject-learned.sh` | Injects plugin `CLAUDE.md` + the project's `MEMORY.md` index. |
+| `SubagentStart` | `hooks/inject-learned.sh` | Same injection for subagents, so they aren't memory-blind. |
+| `UserPromptSubmit` | `hooks/recall-prompt.sh` | Matches the prompt against the trigger index and injects the matching memory entries before the turn starts. |
+| `PreToolUse` | `hooks/recall-pretool.sh` | Matches Edit/Write/Bash tool input against the trigger index; injects matching entries; corrections/directives gate the first matching action once per session. |
 | `PostCompact` | `hooks/post-compact.sh` | Same content, re-injected after Claude compacts context. |
 | `Stop` | `hooks/session-end-learn.sh` | Fires when the session ends. If ≥5k input tokens of activity, exits with code 2 to trigger `/hydra-claude:learn`. |
 
 The `learn` skill (`skills/learn/SKILL.md`) is the capture procedure: filter the conversation to repo-specific patterns, route each to an existing category or create a new one, write to the topic file, and update the `MEMORY.md` index.
 
 **Mid-session auto-capture.** In addition to the end-of-session scan, the plugin's `CLAUDE.md` instructs Claude to invoke `/hydra-claude:learn` immediately when a high-signal moment fires — an explicit save request, a user correction, a directive, or a validated non-obvious approach. The skill enters "focused mode" and writes just that one pattern without re-scanning the conversation. The end-of-session scan remains as a catch-all safety net.
+
+### Decision-point recall
+
+Recall no longer depends on the agent remembering to check memory. At capture time the learn skill writes machine-readable `triggers:` (path globs, command regexes, keywords) into each topic file, regenerates `.claude/memory/plugin/triggers.tsv`, and compiles path-anchored topics into native Claude Code rules at `.claude/rules/hydra/` (attached automatically when a matching file enters context). At decision time two bash hooks match the index in tens of milliseconds (~60ms measured on a typical store; scales with trigger count) and inject the matching entries: on every user prompt (before the turn) and on every Edit/Write/Bash call (advisory; corrections and directives deny the first matching call once per session with the rule in the deny reason). All injection is deduped per session, capped at 10k chars, and fails open — a missing or stale index simply degrades to the old voluntary behavior.
+
+Uninstall/cleanup: remove the hook registrations, `rm -rf .claude/rules/hydra`, and delete `triggers.tsv`; topic files remain valid without them.
 
 ---
 

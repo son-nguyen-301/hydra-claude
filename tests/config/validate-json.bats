@@ -21,10 +21,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert [ -n "$output" ]
 }
 
-@test "plugin.json: version is 3.5.0" {
+@test "plugin.json: version is 3.7.0" {
   run jq -r '.version // empty' "$PLUGIN_JSON"
   assert_success
-  assert_equal "3.5.0" "$output"
+  assert_equal "3.7.0" "$output"
 }
 
 @test "plugin.json: has skills field" {
@@ -42,9 +42,18 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_failure
 }
 
-@test "plugin.json: hooks.UserPromptSubmit is absent (memory-only)" {
-  run jq -e '.hooks.UserPromptSubmit' "$PLUGIN_JSON"
-  assert_failure
+@test "plugin.json: hooks.UserPromptSubmit registered (recall)" {
+  run jq -r '.hooks.UserPromptSubmit[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output --partial "recall-prompt.sh"
+}
+
+@test "plugin.json: hooks.PreToolUse registered with tool matcher" {
+  run jq -r '.hooks.PreToolUse[0].matcher // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output "Edit|Write|MultiEdit|Bash"
+  run jq -r '.hooks.PreToolUse[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_output --partial "recall-pretool.sh"
 }
 
 @test "plugin.json: hooks.PostToolUse is absent" {
@@ -67,6 +76,12 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_success
 }
 
+@test "plugin.json: hooks.SubagentStart registered (recall)" {
+  run jq -r '.hooks.SubagentStart[0].hooks[0].command // empty' "$PLUGIN_JSON"
+  assert_success
+  assert_output --partial "inject-learned.sh"
+}
+
 # ── marketplace.json tests ────────────────────────────────────────────────────
 
 @test "marketplace.json: is valid JSON" {
@@ -74,10 +89,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_success
 }
 
-@test "marketplace.json: plugins[0].version is 3.5.0" {
+@test "marketplace.json: plugins[0].version is 3.7.0" {
   run jq -r '.plugins[0].version // empty' "$MARKETPLACE_JSON"
   assert_success
-  assert_equal "3.5.0" "$output"
+  assert_equal "3.7.0" "$output"
 }
 
 # ── ' settings.json' tests ────────────────────────────────────────────────────
@@ -92,9 +107,16 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_failure
 }
 
-@test "settings.json: hooks.UserPromptSubmit is absent (memory-only)" {
-  run jq -e '.hooks.UserPromptSubmit' "$SETTINGS_JSON"
-  assert_failure
+@test "settings.json: hooks.UserPromptSubmit registered (recall)" {
+  run jq -r '.hooks.UserPromptSubmit[0].hooks[0].command // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output --partial "recall-prompt.sh"
+}
+
+@test "settings.json: hooks.PreToolUse registered with tool matcher" {
+  run jq -r '.hooks.PreToolUse[0].matcher // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output "Edit|Write|MultiEdit|Bash"
 }
 
 @test "settings.json: has hooks.SessionStart" {
@@ -110,4 +132,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
 @test "settings.json: has hooks.Stop" {
   run jq -e '.hooks.Stop' "$SETTINGS_JSON"
   assert_success
+}
+
+@test "settings.json: hooks.SubagentStart registered (recall)" {
+  run jq -r '.hooks.SubagentStart[0].hooks[0].command // empty' "$SETTINGS_JSON"
+  assert_success
+  assert_output --partial "inject-learned.sh"
 }
