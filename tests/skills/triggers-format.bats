@@ -88,3 +88,20 @@ SEED="$ROOT/skills/seed-memory/SKILL.md"
   run grep -F 'class: pattern' "$SEED"
   assert_success
 }
+
+RULES_MD="$ROOT/CLAUDE.md"
+
+@test "CLAUDE.md: has check-before-acting recall protocol" {
+  run grep -iE 'check before acting|recall protocol' "$RULES_MD"
+  assert_success
+}
+
+@test "CLAUDE.md: requires announcing every applied memory" {
+  run grep -F 'Applying saved pattern' "$RULES_MD"
+  assert_success
+}
+
+@test "CLAUDE.md: requires memory context in subagent prompts" {
+  run grep -iE 'subagent.*(memory|entries)' "$RULES_MD"
+  assert_success
+}

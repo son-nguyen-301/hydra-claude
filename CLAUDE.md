@@ -19,6 +19,20 @@ Before asking the user ANY clarifying question, check the Q&A memory first:
 4. **Reuse (fresh):** use the stored answer AND announce it explicitly — **never silent**. For example: "Reusing a saved answer — last session you said the test framework is bats. Continuing on that basis."
 5. **Re-confirm (stale):** surface the answer and ask whether it still holds ("Last session you said X — still true?"). If confirmed, invoke learn in Q&A focused mode with a QA block (trigger 5 format) to refresh it. If changed, the new answer supersedes the old (trigger 5 handles the supersede/archive).
 
+## Check before acting (recall protocol)
+
+Injected memory blocks are authoritative. When a block starting "Saved memory matches…" appears (at prompt time or next to a tool result), apply its entries before deciding, and announce every entry you use: "Applying saved pattern <heading> from <topic>". Never apply a saved entry silently — silent application is indistinguishable from non-recall.
+
+If a tool call is denied by the automated memory gate, it is not a user denial and not an error: read the correction in the reason, then retry the same call applying it (or adjust the call if the rule forbids it).
+
+If no block was injected for a domain you are about to act in, check the injected memory index and read the matching topic file before proceeding. Entries tagged `[needs-reconfirm]` must be re-confirmed with the user before you rely on them.
+
+Common rationalizations, answered:
+- "This task is too simple to need memory" — check anyway; corrections are usually about simple things.
+- "I already know this codebase" — the store may contradict you; it wins until re-confirmed.
+
+When dispatching a subagent (Task/Agent tool) into a domain with saved memory, paste the matched entries into the subagent's prompt — subagents receive no memory injection of their own.
+
 ## Auto-write triggers
 
 When any of these fire mid-conversation, invoke `/hydra-claude:learn` IMMEDIATELY in focused mode. Do not wait for session end; do not batch.
