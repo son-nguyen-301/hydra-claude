@@ -21,10 +21,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert [ -n "$output" ]
 }
 
-@test "plugin.json: version is 3.6.0" {
+@test "plugin.json: version is 3.7.0" {
   run jq -r '.version // empty' "$PLUGIN_JSON"
   assert_success
-  assert_equal "3.6.0" "$output"
+  assert_equal "3.7.0" "$output"
 }
 
 @test "plugin.json: has skills field" {
@@ -89,10 +89,10 @@ SETTINGS_JSON="$ROOT/ settings.json"
   assert_success
 }
 
-@test "marketplace.json: plugins[0].version is 3.6.0" {
+@test "marketplace.json: plugins[0].version is 3.7.0" {
   run jq -r '.plugins[0].version // empty' "$MARKETPLACE_JSON"
   assert_success
-  assert_equal "3.6.0" "$output"
+  assert_equal "3.7.0" "$output"
 }
 
 # ── ' settings.json' tests ────────────────────────────────────────────────────

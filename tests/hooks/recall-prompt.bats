@@ -116,3 +116,15 @@ _run_hook() {
   # A later prompt matching again injects the huge topic's content is not required
   # (it may truncate again); the invariant under test is only the state file.
 }
+
+@test "recall-prompt: 10 invocations complete within 5 seconds (hang guard)" {
+  local payload start elapsed i
+  payload=$(jq -n --arg c "$HYDRA_FAKE_PROJECT" \
+    '{prompt: "please add a new hook that fires on file edits", session_id: "perf", cwd: $c}')
+  start=$SECONDS
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    echo "$payload" | TMPDIR="$TMPDIR" bash "$HOOK" > /dev/null
+  done
+  elapsed=$(( SECONDS - start ))
+  [ "$elapsed" -le 5 ]
+}
